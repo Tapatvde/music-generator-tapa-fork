@@ -1,15 +1,15 @@
-# Vom Installer erzeugt oder heruntergeladen
 engine/
-.venv/
-*.lnk
-
-# Persönliche Daten: Songs, Datenbank, Logs, Installationsergebnis
 data/
-
-# Python / macOS
+.venv/
 __pycache__/
 *.pyc
-.DS_Store
-
-# Quelldatei des Logos (die App nutzt static/alphatester.png)
-274_Alphatester_Schrift.png
+*.log
+*.pth
+*.pt
+*.index
+*.gguf
+*.wav
+*.mp3
+*.m4a
+*.flac
+.env

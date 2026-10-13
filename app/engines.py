@@ -35,8 +35,9 @@ ACE_FIELDS = {
 }
 
 
-# DiT-Modell: SFT (50 Schritte, klingt deutlich besser als turbo). Standard mit 2 Mrd. Parametern, optional XL mit 4 Mrd.
-DIT_MODELS = {"standard": "acestep-v15-sft-Q8_0.gguf", "xl": "acestep-v15-xl-sft-Q8_0.gguf"}
+# DiT-Modell: nur noch SFT (50 Schritte, klingt deutlich besser als turbo)
+DIT_MODEL = "acestep-v15-sft-Q8_0.gguf"
+DIT_MODELS = {'standard':DIT_MODEL,'xl':'acestep-v15-xl-sft-Q8_0.gguf'}
 
 
 class AceStepCpp:
@@ -44,7 +45,7 @@ class AceStepCpp:
 
     def __init__(self, base_url: str, lm_url: str = "", poll_interval: float = 1.5, timeout_minutes: float = 30,
                  lm_model: str = "", dit: str = "standard"):
-        self.dit_model = DIT_MODELS.get(dit, DIT_MODELS["standard"])
+        self.dit_model = DIT_MODELS.get(dit, DIT_MODEL)
         self.base = base_url.rstrip("/")
         # Auf Apple M4 liefert das LM unter Metal Unsinn (0 Codes) -> eigener CPU-Server
         self.lm_base = (lm_url or base_url).rstrip("/")
@@ -132,6 +133,7 @@ class AceStepCpp:
             res = await self._wait(c, self.base, str(r.json()["id"]), "Synthese", start, progress)
             audio, ext = _extract_audio(res)
         meta = {k: enriched.get(k) for k in ("bpm", "duration", "keyscale", "timesignature", "vocal_language", "lyrics", "caption")}
+        meta['sound_model'] = self.dit_model
         return audio, ext, meta
 
 
@@ -144,6 +146,19 @@ class AceStepCpp:
             res = await self._wait(c, self.lm_base, str(r.json()["id"]), "Analyse", time.monotonic(), lambda _msg: asyncio.sleep(0))
             data = _extract_json(res)
             return data[0] if isinstance(data, list) else data
+
+    async def edit_original(self, request: dict, audio: bytes, progress: Progress):
+        """Audio-conditioned synthesis; never replace the source with newly generated LM codes."""
+        req={**request,'output_format':'wav16','synth_model':self.dit_model,'use_cot_caption':False}
+        parts={'request':('request.json',json.dumps(req,ensure_ascii=False),'application/json'),
+               'audio':('source.wav',audio,'audio/wav'),'ref_audio':('reference.wav',audio,'audio/wav')}
+        start=time.monotonic()
+        async with httpx.AsyncClient(timeout=180) as c:
+            response=await c.post(f'{self.base}/synth',files=parts)
+            if response.status_code>=400:
+                raise EngineError(f'Originalbearbeitung: HTTP {response.status_code} {response.text[:300]}')
+            result=await self._wait(c,self.base,str(response.json()['id']),'Originalbearbeitung',start,progress)
+        return _extract_audio(result)
 
 
 def _extract_json(res: httpx.Response):
@@ -184,4 +199,4 @@ def _ext_for(ctype: str) -> str:
 
 def make_engine(settings: dict):
     return AceStepCpp(settings["server_url"], settings.get("lm_url", ""), settings["poll_interval"],
-                      settings["timeout_minutes"], settings.get("lm_model", ""), settings.get("dit", "standard"))
+                      settings["timeout_minutes"], settings.get("lm_model", ""), settings.get('dit','standard'))

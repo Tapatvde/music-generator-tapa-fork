@@ -1,0 +1,661 @@
+diff --git a/assets/pymss_weights/model_bs_roformer_ep_368_sdr_12.9628.yaml b/assets/pymss_weights/model_bs_roformer_ep_368_sdr_12.9628.yaml
+index d1a439a..c37ab72 100644
+--- a/assets/pymss_weights/model_bs_roformer_ep_368_sdr_12.9628.yaml
++++ b/assets/pymss_weights/model_bs_roformer_ep_368_sdr_12.9628.yaml
+@@ -104,12 +104,12 @@ training:
+   gradient_accumulation_steps: 1
+   grad_clip: 0
+   instruments:
+-  - vocals
+-  - instrumental
++  - Vocals
++  - Instrumental
+   lr: 5.0e-05
+   patience: 2
+   reduce_factor: 0.95
+-  target_instrument: vocals
++  target_instrument: Vocals
+   num_epochs: 1000
+   num_steps: 1000
+   augmentation: false # enable augmentations by audiomentations and pedalboard
+@@ -129,5 +129,5 @@ training:
+ 
+ inference:
+   batch_size: 1
+-  dim_t: 901
+-  num_overlap: 4
+\ No newline at end of file
++  dim_t: 801
++  overlap_size: 17640
+diff --git a/infer/cli.py b/infer/cli.py
+index 190216d..353d476 100644
+--- a/infer/cli.py
++++ b/infer/cli.py
+@@ -73,6 +73,8 @@ def build_parser():
+         "--recursive", action="store_true", help="Scan input subdirectories."
+     )
+     parser.add_argument("--overwrite", action="store_true")
++    parser.add_argument("--no-voice-range", action="store_true", help="Ignore the model's optional .voice.json singing range.")
++    parser.add_argument("--range-report", help="Write applied F0 range diagnostics as JSON.")
+     return parser
+ 
+ 
+@@ -260,6 +262,7 @@ def main(argv=None):
+ 
+     i18n = I18nAuto()
+     config = create_config()
++    config.disable_voice_range = args.no_voice_range
+     print(i18n("当前设备：%s | 推理精度：%s") % (config.device, config.dtype))
+     print("%s: %s" % (i18n("选择模型"), model_name))
+     print("%s: %s" % (i18n("说话人ID（0~109）"), speaker_id))
+@@ -285,6 +288,9 @@ def main(argv=None):
+             failed += 1
+             continue
+         write_audio(output_path, result[1], result[0], output_format)
++        if args.range_report:
++            import json
++            Path(args.range_report).write_text(json.dumps(vc.pipeline.last_range_stats, indent=2), encoding="utf-8")
+         print(str(output_path))
+     return 1 if failed else 0
+ 
+diff --git a/infer/vc/modules.py b/infer/vc/modules.py
+index 0fd9354..6c253b9 100644
+--- a/infer/vc/modules.py
++++ b/infer/vc/modules.py
+@@ -166,6 +166,7 @@ class VC:
+                 "",
+             )
+         person = f'{os.getenv("weight_root")}/{sid}'
++        self.voice_model_path = person
+         logger.info("%s: %s", i18n("正在加载模型"), person)
+ 
+         if self.net_g is not None:
+@@ -239,6 +240,10 @@ class VC:
+             return inference_status("单次推理", "等待输入", i18n("请上传音频文件")), None
+         f0_up_key = int(f0_up_key)
+         try:
++            from infer.voice_range import load_profile
++            self.pipeline.voice_profile = load_profile(self.voice_model_path)
++            if getattr(self.config, 'disable_voice_range', False):
++                self.pipeline.voice_profile = None
+             audio = load_audio(input_audio_path, 16000)
+             audio_max = np.abs(audio).max() / 0.95
+             if audio_max > 1:
+diff --git a/infer/vc/pipeline.py b/infer/vc/pipeline.py
+index 2aa3235..2d67bc8 100644
+--- a/infer/vc/pipeline.py
++++ b/infer/vc/pipeline.py
+@@ -15,6 +15,7 @@ import torch.nn.functional as F
+ from scipy import signal
+ 
+ from infer.hubert import extract_hubert_features
++from infer.voice_range import apply_range, repair_octaves, apply_section_registers, note_midi
+ from tools.cuda_graph import cuda_graph_enabled, run_cuda_graph
+ 
+ bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
+@@ -60,6 +61,8 @@ class Pipeline(object):
+         self.t_center = self.sr * self.x_center  # 查询切点位置
+         self.t_max = self.sr * self.x_max  # 免查询时长阈值
+         self.device = config.device
++        self.voice_profile = None
++        self.last_range_stats = None
+ 
+     def get_f0(
+         self,
+@@ -70,12 +73,20 @@ class Pipeline(object):
+     ):
+         if f0_method not in ("pm", "rmvpe", "fcpe"):
+             raise ValueError(f"Unsupported F0 method: {f0_method}")
++        self.last_range_stats = None
+         time_step = self.window / self.sr * 1000
++        self.last_section_register_stats = None
++        self.last_section_source_f0 = None
+         f0_min = 50
+         f0_max = 1100
+         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
+         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
+-        if f0_method == "pm":
++        forced = getattr(self, 'forced_f0', None)
++        if forced is not None:
++            if len(forced) != p_len:
++                raise ValueError('Harmoniestimme hat eine abweichende Tonhöhenlänge.')
++            f0 = np.asarray(forced, dtype=np.float32).copy()
++        elif f0_method == "pm":
+             f0 = (
+                 parselmouth.Sound(x, self.sr)
+                 .to_pitch_ac(
+@@ -122,13 +133,64 @@ class Pipeline(object):
+                 threshold=0.006,
+             ).squeeze().detach().cpu().numpy()
+ 
++        profile_enabled = forced is None and self.voice_profile and self.voice_profile.get('enabled', False)
++        self.last_pitch_debug = None
++        repair_stats = None
++        if profile_enabled and self.voice_profile.get('octave_reference') == 'pm':
++            reference_pitch=parselmouth.Sound(x,self.sr).to_pitch_ac(
++                time_step=time_step/1000,voicing_threshold=.6,pitch_floor=65,pitch_ceiling=800)
++            reference_times=reference_pitch.xs()
++            indices=np.clip(np.rint((np.arange(len(f0))*time_step/1000-reference_times[0])/(time_step/1000)).astype(int),0,len(reference_times)-1)
++            reference=reference_pitch.selected_array['frequency'][indices]
++            confidence=reference_pitch.selected_array['strength'][indices]
++            raw=f0.copy()
++            f0,repair_stats=repair_octaves(f0,reference,confidence,self.voice_profile.get('repair_isolated_high_runs',False))
++            self.last_pitch_debug={'raw':raw,'reference':reference,'confidence':confidence,'repaired':f0.copy()}
++        if profile_enabled:
++            # Shift first, then constrain. Leave the legacy path unchanged without a profile.
++            section_source=f0.copy()
++            f0 = f0 * pow(2, f0_up_key / 12)
++            f0, self.last_range_stats = apply_range(f0, self.voice_profile)
++            if getattr(self,'section_registers',None):
++                self.last_section_source_f0=section_source.copy()
++                f0,self.last_section_register_stats,controlled=apply_section_registers(
++                    section_source,f0,self.voice_profile,self.section_registers,
++                    getattr(self,'section_source_offset',0),self.x_pad)
++                # Keep diagnostics tied to the actual contour after section choices.
++                stats=self.last_range_stats
++                pitched=section_source*pow(2,f0_up_key/12)
++                voiced=(pitched>0)&(f0>0)
++                actual_shifts=np.rint(np.log2(f0[voiced]/pitched[voiced])).astype(int)
++                stats.update(shifted_frames=int(np.sum(actual_shifts!=0)),
++                    shift_octaves_counts={str(n):int(np.sum(actual_shifts==n)) for n in np.unique(actual_shifts)})
++                stats['phrases_exceeding_range']=[r for r in stats.get('phrases_exceeding_range',[])
++                    if not controlled[int(r['start_seconds']*100):int(r['end_seconds']*100)].any()]
++                for region in self.last_section_register_stats:
++                    if region['range_conflict']:
++                        stats['phrases_exceeding_range'].extend({'start_seconds':p['start']-getattr(self,'section_source_offset',0)+self.x_pad,
++                            'end_seconds':p['end']-getattr(self,'section_source_offset',0)+self.x_pad,'section':region['section']}
++                            for p in region['phrase_times'])
++                notes=69+12*np.log2(f0[f0>0]/440)
++                if len(notes):
++                    low=note_midi(self.voice_profile['min_note'])
++                    high=note_midi(self.voice_profile['max_note'])
++                    stats.update(output_min_midi=float(notes.min()),output_max_midi=float(notes.max()),
++                        frames_outside_margin=int(np.sum((notes<low-1)|(notes>high+1))))
++            if repair_stats:
++                self.last_range_stats['pitch_repair']=repair_stats
++                self.last_pitch_debug['synthesis']=f0.copy()
++            f0_up_key = 0
+         try:
+             uv = f0 == 0
+-            f0[uv] = np.interp(np.where(uv)[0], np.where(~uv)[0], f0[~uv])
++            if not (profile_enabled and uv.all()):
++                f0[uv] = np.interp(np.where(uv)[0], np.where(~uv)[0], f0[~uv])
+         except Exception:
+             traceback.print_exc()
+         f0 *= pow(2, f0_up_key / 12)
+         f0bak = f0.copy()
++        if forced is not None or (profile_enabled and self.voice_profile.get('preserve_unvoiced', True)):
++            # Do not turn consonants/breaths into voiced synthesis through interpolation.
++            f0bak[uv] = 0
+         f0_mel = 1127 * np.log(1 + f0 / 700)
+         f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * 254 / (
+             f0_mel_max - f0_mel_min
+@@ -136,6 +198,8 @@ class Pipeline(object):
+         f0_mel[f0_mel <= 1] = 1
+         f0_mel[f0_mel > 255] = 255
+         f0_coarse = np.rint(f0_mel).astype(np.int32)
++        self.last_synthesis_f0 = f0bak.copy()
++        self.last_synthesis_f0[uv] = 0
+         return f0_coarse, f0bak  # 1-0
+ 
+     def vc(
+@@ -305,6 +369,7 @@ class Pipeline(object):
+         t1 = ttime()
+         audio_pad = np.pad(audio, (self.t_pad, self.t_pad), mode="reflect")
+         p_len = audio_pad.shape[0] // self.window
++        self.last_p_len = p_len
+         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
+         pitch, pitchf = None, None
+         if if_f0 == 1:
+diff --git a/tools/pymss_webui.py b/tools/pymss_webui.py
+index 92b1798..02e4ad8 100644
+--- a/tools/pymss_webui.py
++++ b/tools/pymss_webui.py
+@@ -413,6 +413,8 @@ class MSSTBatchSeparator:
+         mix, sample_rate = self._load_audio(input_path, sr=MODEL_SAMPLE_RATE, mono=False)
+         inference_started = time.perf_counter()
+         results = self.separator.separate(mix, pbar=False)
++        # Catalog configs may label stems "Vocals"/"Instrumental"; RVC uses lowercase.
++        results = {str(stem).lower(): audio for stem, audio in results.items()}
+         inference_seconds = time.perf_counter() - inference_started
+         missing = {
+             self.spec.desired_stem,
+diff --git a/train/preprocess.py b/train/preprocess.py
+index 917fb92..a7dbddf 100644
+--- a/train/preprocess.py
++++ b/train/preprocess.py
+@@ -104,9 +104,9 @@ class PreProcess:
+                         idx1 += 1
+                     else:
+                         tmp_audio = audio[start:]
++                        self.norm_write(tmp_audio, output_key, idx1)
+                         idx1 += 1
+                         break
+-            self.norm_write(tmp_audio, output_key, idx1)
+             if should_report(progress_index, total):
+                 println(
+                     i18n("[数据切分] 进度：%s/%s | %s")
+diff --git a/train/process_ckpt.py b/train/process_ckpt.py
+index a06e660..68abf84 100644
+--- a/train/process_ckpt.py
++++ b/train/process_ckpt.py
+@@ -3,6 +3,7 @@ import sys
+ import traceback
+ import json
+ from collections import OrderedDict
++from pathlib import Path
+ 
+ import torch
+ 
+@@ -63,7 +64,15 @@ def savee(ckpt, sr, if_f0, name, epoch, version, hps):
+         speaker_info = normalize_speaker_info(getattr(hps, "speaker_info", []))
+         if speaker_info:
+             opt["speaker_info"] = speaker_info
+-        torch.save(opt, "assets/weights/%s.pth" % name)
++        export_dir = os.environ.get("RVC_TRAIN_EXPORT_DIR")
++        if export_dir:
++            target = Path(export_dir).resolve()
++            if not target.is_relative_to(Path(__file__).resolve().parents[3]):
++                raise ValueError("Trainingsexport außerhalb des Forks.")
++            target.mkdir(parents=True, exist_ok=True)
++            torch.save(opt, target / (name + ".pth"))
++        else:
++            torch.save(opt, "assets/weights/%s.pth" % name)
+         return i18n("成功")
+     except:
+         return traceback.format_exc()
+diff --git a/train/utils.py b/train/utils.py
+index b6f4b06..a8bb430 100644
+--- a/train/utils.py
++++ b/train/utils.py
+@@ -14,7 +14,7 @@ from tools.file_io import read_text
+ 
+ MATPLOTLIB_FLAG = False
+ 
+-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
++logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+ logger = logging
+ 
+ 
+diff --git a/webui.py b/webui.py
+index c9eec8c..ccd1f09 100644
+--- a/webui.py
++++ b/webui.py
+@@ -125,7 +125,7 @@ def launch_webui_with_port_fallback(app, config):
+             )
+         try:
+             queued_app.launch(
+-                server_name="0.0.0.0",
++                server_name="127.0.0.1",
+                 inbrowser=not config.noautoopen,
+                 server_port=config.listen_port,
+                 quiet=True,
+@@ -2102,6 +2102,23 @@ with gr.Blocks(title="RVC WebUI", css=TRAINING_INFO_CSS) as app:
+                     queue=False,
+                     api_name="infer_change_speaker_index_dropdown",
+                 )
++        with gr.TabItem("Stimmprofil – Stimmumfang"):
++            from tools.voice_profile_ui import read_settings, save_settings
++            profile_models = list(weight_names())
++            profile_default = None
++            profile_initial = read_settings(profile_default) if profile_default else (False, "C2", "C5", "Bitte ein Modell auswählen.")
++            gr.Markdown("Tiefsten und höchsten singbaren Ton einstellen. Hohe oder tiefe Passagen werden um ganze Oktaven versetzt. C4 bezeichnet das mittlere C; B entspricht dem deutschen H. Die Grenzen aus wenigen Aufnahmen sind eine Testannahme.")
++            range_model = gr.Dropdown(label="Stimmprofil", choices=profile_models, value=profile_default)
++            range_enabled = gr.Checkbox(label="Stimmumfang begrenzen", value=profile_initial[0])
++            with gr.Row():
++                range_min = gr.Textbox(label="Tiefster Ton", value=profile_initial[1])
++                range_max = gr.Textbox(label="Höchster Ton", value=profile_initial[2])
++            range_status = gr.Textbox(label="Status", value=profile_initial[3], interactive=False)
++            range_load = gr.Button("Profil laden")
++            range_save = gr.Button("Stimmumfang speichern")
++            range_load.click(read_settings, [range_model], [range_enabled, range_min, range_max, range_status], api_name="voice_range_load")
++            range_model.change(read_settings, [range_model], [range_enabled, range_min, range_max, range_status], api_name="voice_range_select")
++            range_save.click(save_settings, [range_model, range_enabled, range_min, range_max], [range_status], api_name="voice_range_save")
+         with gr.TabItem(i18n("人声伴奏分离&去混响")):
+             with gr.Group():
+                 gr.Markdown(
+diff --git a/infer/voice_range.py b/infer/voice_range.py
+new file mode 100644
+--- /dev/null
++++ b/infer/voice_range.py
+@@ -0,0 +1,302 @@
++"""Optional per-model singing range applied to the F0 sent to the synthesizer."""
++import json
++from pathlib import Path
++import re
++import numpy as np
++
++NOTES = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
++
++def note_midi(text):
++    match = re.fullmatch(r'([A-Ga-g])([#b]?)(-?\d)', str(text).strip())
++    if not match:
++        raise ValueError('Ton bitte als A2, C#4 oder Bb3 angeben; C4 ist das mittlere C.')
++    letter, accidental, octave = match.groups()
++    return 12*(int(octave)+1) + {'C':0,'D':2,'E':4,'F':5,'G':7,'A':9,'B':11}[letter.upper()] + {'':0,'#':1,'b':-1}[accidental]
++
++def midi_note(value):
++    n = int(value)
++    return NOTES[n % 12] + str(n//12-1)
++
++def validate(profile):
++    if not isinstance(profile, dict) or not isinstance(profile.get('enabled', False), bool):
++        raise ValueError('Ungültiges Stimmumfangsprofil.')
++    low, high = note_midi(profile['min_note']), note_midi(profile['max_note'])
++    if low < 32 or high > 84 or high-low < 12:
++        raise ValueError('Grenzen müssen zwischen G#1 und C6 liegen und mindestens eine Oktave umfassen, damit Oktavversetzungen in der Tonart bleiben.')
++    if profile.get('mode', 'octave_phrases') not in ('octave_phrases', 'melody_phrases'):
++        raise ValueError('Unbekannter Begrenzungsmodus.')
++    if profile.get('mode') == 'melody_phrases':
++        margin = profile.get('boundary_margin_semitones', 1.)
++        if not isinstance(margin, (int, float)) or not np.isfinite(margin) or not 0 <= margin <= 2:
++            raise ValueError('Übergangsspielraum muss zwischen 0 und 2 Halbtönen liegen.')
++    if profile.get('octave_reference') not in (None,'pm'):
++        raise ValueError('Unbekannte Referenz für die Oktavprüfung.')
++    for flag in ['raise_low_phrases','repair_isolated_high_runs','stable_register']:
++        if flag in profile and not isinstance(profile[flag],bool):
++            raise ValueError('Ungültiger Schalter im Stimmprofil: '+flag)
++    return low, high
++
++def profile_path(model):
++    return Path(model).with_suffix('.voice.json')
++
++def load_profile(model):
++    path = profile_path(model)
++    if not path.exists():
++        return None
++    profile = json.loads(path.read_text(encoding='utf-8-sig'))
++    validate(profile)
++    return profile
++
++def apply_range(f0, profile):
++    """Keep zeros; use one octave shift per phrase wherever its entire span fits."""
++    if profile.get('mode') == 'melody_phrases':
++        return apply_melody_range(f0, profile)
++    values = np.asarray(f0).copy()
++    low, high = validate(profile)
++    voiced = np.flatnonzero(np.isfinite(values) & (values > 0))
++    if not profile['enabled'] or not len(voiced):
++        return values, {'enabled': profile['enabled'], 'shifted_frames': 0}
++    midi = 69 + 12*np.log2(values[voiced]/440)
++    shifts = np.arange(-6, 7)
++    chosen = np.zeros(len(voiced), dtype=int)
++    groups = np.split(np.arange(len(voiced)), np.flatnonzero(np.diff(voiced)>12)+1)
++    split_phrases = 0
++    for group in groups:
++        notes = midi[group]
++        candidate = notes[:,None] + 12*shifts
++        valid = (candidate >= low-1e-7) & (candidate <= high+1e-7)
++        if not valid.any(axis=1).all():
++            raise ValueError('Tonhöhe liegt außerhalb der unterstützten Oktavversetzungen.')
++        whole = np.flatnonzero(valid.all(axis=0))
++        if len(whole):
++            choice = whole[np.argmin(np.abs(shifts[whole]))]
++            chosen[group] = shifts[choice]
++            continue
++        split_phrases += 1
++        # When one shift cannot fit a wide phrase, penalize register changes;
++        # changing at a note transition is preferable to changing during a held note.
++        unary = .002*np.abs(shifts)
++        costs = np.where(valid[0], unary, np.inf)
++        back = np.zeros((len(notes), len(shifts)), dtype=np.int8)
++        distance = np.abs(shifts[:,None]-shifts[None,:])
++        for i in range(1, len(notes)):
++            penalty = .15 if abs(notes[i]-notes[i-1])>.8 else 1.5
++            if voiced[group[i]]-voiced[group[i-1]]>1:
++                penalty = .05
++            matrix = costs[:,None] + penalty*distance
++            back[i] = np.argmin(matrix,axis=0)
++            costs = np.where(valid[i], np.min(matrix,axis=0)+unary, np.inf)
++        choice = int(np.argmin(costs))
++        for i in range(len(notes)-1, -1, -1):
++            chosen[group[i]] = shifts[choice]
++            choice = int(back[i,choice])
++    values[voiced] *= np.exp2(chosen.astype(float))
++    result_midi = 69+12*np.log2(values[voiced]/440)
++    assert result_midi.min() >= low-1e-5 and result_midi.max() <= high+1e-5
++    return values, {'enabled': True, 'min_note': profile['min_note'], 'max_note':profile['max_note'],
++                    'voiced_frames':len(voiced), 'shifted_frames':int(np.sum(chosen!=0)),
++                    'phrases':len(groups), 'phrases_requiring_multiple_shifts':split_phrases,
++                    'shift_octaves_counts':{str(n):int(np.sum(chosen==n)) for n in np.unique(chosen)},
++                    'output_min_midi':float(result_midi.min()),'output_max_midi':float(result_midi.max())}
++
++def apply_melody_range(f0, profile):
++    """Prefer intact melodic phrases over an impossible hard range guarantee.
++
++    A constant octave per phrase preserves intervals and key. If a phrase is
++    wider than the available range, report the conflict rather than fold notes.
++    Only very brief spikes surrounded by similar pitches are repaired.
++    """
++    values = np.asarray(f0).copy()
++    low, high = validate(profile)
++    voiced = np.flatnonzero(np.isfinite(values) & (values > 0))
++    if not profile['enabled'] or not len(voiced):
++        return values, {'enabled':profile['enabled'], 'shifted_frames':0}
++    midi = 69+12*np.log2(values[voiced]/440)
++    repaired = np.zeros(len(voiced), dtype=bool)
++    # Never compare neighbours across a pause. Repair <=80ms spikes or <=200ms
++    # near-exact octave errors bracketed by agreeing notes, retaining longer steps.
++    for run in np.split(np.arange(len(voiced)), np.flatnonzero(np.diff(voiced)>1)+1):
++        notes = midi[run].copy()
++        for i in range(1,len(run)-1):
++            if repaired[run[i]]:
++                continue
++            for width in range(min(20,len(run)-i-1),0,-1):
++                left = notes[max(0,i-4):i]
++                right = notes[i+width:min(len(run),i+width+4)]
++                if len(left)<3 or len(right)<3:
++                    continue
++                a,b = float(np.median(left)),float(np.median(right))
++                if abs(a-b)>3:
++                    continue
++                target = np.linspace(a,b,width+2)[1:-1]
++                residual=notes[i:i+width]-target
++                octave=np.round(residual/12)
++                octave_error=np.all((np.abs(octave)>=1)&(np.abs(residual-12*octave)<2.5))
++                if np.all(np.abs(residual)>7) and (width<=8 or octave_error):
++                    indices=run[i:i+width]
++                    midi[indices]=target
++                    repaired[indices]=True
++                    break
++    stable = profile.get('stable_register', False)
++    groups=np.split(np.arange(len(voiced)),np.flatnonzero(np.diff(voiced)>(45 if stable else 30))+1)
++    margin=float(profile.get('boundary_margin_semitones',1.))
++    shifts=np.arange(-6,7)
++    # If neighbouring vocal runs genuinely occupy different registers, only
++    # reconsider the shift at an existing >=80ms unvoiced break, never mid-note.
++    refined=[]
++    for group in groups:
++        lower,upper=np.percentile(midi[group],[1,99])
++        fits=(lower+12*shifts>=low-margin)&(upper+12*shifts<=high+margin)
++        if fits.any() or stable:
++            refined.append(group)
++        else:
++            refined.extend(np.split(group,np.flatnonzero(np.diff(voiced[group])>8)+1))
++    groups=refined
++    chosen=np.zeros(len(voiced),dtype=int)
++    conflicts=[]
++    # Across entire lines prefer retaining the same register. No mid-line
++    # folding at brief consonants, and no change to the legacy profile mode.
++    stable_choices = None
++    if stable:
++        costs = []
++        for group in groups:
++            lower, upper = np.percentile(midi[group], [1, 99])
++            lower_penalty = np.maximum(low-margin-(lower+12*shifts), 0)**2 if profile.get('raise_low_phrases', True) else np.zeros(len(shifts))
++            # Requested register wins over cross-line continuity when it fits;
++            # otherwise a single high line could drag every low verse down.
++            costs.append(lower_penalty + 6*np.maximum(upper+12*shifts-high-margin, 0)**2 + 8*np.abs(shifts))
++        scores = costs[0].copy()
++        backs = []
++        for cost in costs[1:]:
++            transition = scores[:,None] + 4*np.abs(shifts[:,None]-shifts[None,:])
++            backs.append(np.argmin(transition, axis=0))
++            scores = cost + np.min(transition, axis=0)
++        choice = int(np.argmin(scores)); stable_choices = [choice]
++        for back in reversed(backs):
++            choice = int(back[choice]); stable_choices.append(choice)
++        stable_choices.reverse()
++    for group_index, group in enumerate(groups):
++        notes=midi[group]
++        # Robust endpoints prevent a few transition frames moving an entire line.
++        lower,upper=np.percentile(notes,[1,99])
++        fits=(lower+12*shifts>=low-margin)&(upper+12*shifts<=high+margin)
++        if profile.get('raise_low_phrases',True) is False:
++            # The user prioritises natural melody. Treat the lower estimate as
++            # advisory rather than lifting an entire line for low note attacks.
++            fits &= shifts<=0
++            fits[shifts==0] = upper<=high+margin
++        if stable:
++            shift = shifts[stable_choices[group_index]]
++            if not fits[stable_choices[group_index]]:
++                conflicts.append({'start_seconds':float(voiced[group[0]]/100),'end_seconds':float(voiced[group[-1]]/100),
++                                  'source_robust_span_midi':[float(lower),float(upper)],'octave_shift':int(shift)})
++        elif fits.any():
++            options=np.flatnonzero(fits)
++            shift=shifts[options[np.argmin(np.abs(shifts[options]))]]
++        else:
++            candidate=notes[:,None]+12*shifts
++            # High excursions weigh more heavily because the user reported
++            # unrecognisable falsetto. A conflict remains explicit in diagnostics.
++            cost=np.mean(np.maximum(low-margin-candidate,0)**2 + 6*np.maximum(candidate-high-margin,0)**2,axis=0)+.05*np.abs(shifts)
++            shift=shifts[np.argmin(cost)]
++            conflicts.append({'start_seconds':float(voiced[group[0]]/100),'end_seconds':float(voiced[group[-1]]/100),
++                              'source_robust_span_midi':[float(lower),float(upper)],'octave_shift':int(shift)})
++        chosen[group]=shift
++    result_midi=midi+12*chosen
++    values[voiced]=440*np.exp2((result_midi-69)/12)
++    outside=(result_midi<low-margin)|(result_midi>high+margin)
++    return values,{'enabled':True,'mode':'melody_phrases','min_note':profile['min_note'],'max_note':profile['max_note'],
++                  'stable_register':stable,
++                  'boundary_margin_semitones':margin,'voiced_frames':len(voiced),'shifted_frames':int(np.sum(chosen!=0)),
++                  'repaired_spike_frames':int(repaired.sum()),'phrases':len(groups),
++                  'phrases_requiring_multiple_shifts':0,'phrases_exceeding_range':conflicts,
++                  'frames_outside_margin':int(outside.sum()),
++                  'shift_octaves_counts':{str(n):int(np.sum(chosen==n)) for n in np.unique(chosen)},
++                  'output_min_midi':float(result_midi.min()),'output_max_midi':float(result_midi.max())}
++
++def apply_section_registers(source, fallback, profile, regions, offset=0, padding=0):
++    """One octave shift per selected text section, applied to intact vocal phrases.
++
++    Select a whole phrase by greatest overlap; never switch inside a held note.
++    Low/middle/high are target registers, not guaranteed distinct octave choices.
++    """
++    source=np.asarray(source,dtype=np.float32);output=np.asarray(fallback).copy()
++    low,high=validate(profile);margin=float(profile.get('boundary_margin_semitones',1.))
++    voiced=np.flatnonzero(np.isfinite(source)&(source>0))
++    groups=np.split(voiced,np.flatnonzero(np.diff(voiced)>45)+1) if len(voiced) else []
++    times=np.arange(len(source))*.01-padding+offset
++    assigned={i:[] for i in range(len(regions))}
++    for group in groups:
++        overlaps=[int(np.sum((times[group]>=r['start'])&(times[group]<r['end']))) for r in regions]
++        if overlaps and max(overlaps)>0:
++            winner=int(np.argmax(overlaps))
++            if overlaps[winner]/len(group)>=.3:assigned[winner].append(group)
++    shifts=np.arange(-6,7);diagnostics=[];controlled=np.zeros(len(source),dtype=bool)
++    for index,region in enumerate(regions):
++        parts=assigned[index]
++        if not parts:continue
++        indices=np.concatenate(parts);notes=69+12*np.log2(source[indices]/440)
++        bottom,median,top=np.percentile(notes,[1,50,99])
++        center=float(profile.get('register_center_midi',(low+high)/2))
++        if not np.isfinite(center):raise ValueError('Ungültige mittlere Tonlagenreferenz.')
++        center=float(np.clip(center,low,high))
++        target={'low':low+(center-low)*.4,'middle':center,'high':center+(high-center)*.6}[region['level']]
++        distance=np.abs(median+12*shifts-target)
++        fits=(bottom+12*shifts>=low-margin)&(top+12*shifts<=high+margin)
++        ideal=int(np.argmin(distance));conflict=not fits.any()
++        if fits.any():choice=int(np.argmin(np.where(fits,distance,np.inf)))
++        else:
++            penalty=6*np.maximum(top+12*shifts-high-margin,0)**2+np.maximum(low-margin-bottom-12*shifts,0)**2
++            choice=int(np.argmin(penalty+distance*.25))
++        shift=int(region.get('octave_shift',shifts[choice]))
++        # A full-song plan keeps previews and full versions in the same octave.
++        output[indices]=source[indices]*np.exp2(float(shift));controlled[indices]=True
++        conflict=bool(bottom+12*shift<low-margin or top+12*shift>high+margin)
++        diagnostics.append({'section':region['section'],'tag':region['tag'],'level':region['level'],
++            'octave_shift':shift,'source_median_midi':float(median),'output_median_midi':float(median+12*shift),
++            'target_midi':float(target),'range_conflict':bool(conflict),'range_limited':shift!=int(shifts[ideal]),
++            'phrase_times':[{'start':float(times[p[0]]),'end':float(times[p[-1]]+.01)} for p in parts]})
++    output[source<=0]=0
++    return output,diagnostics,controlled
++
++
++def repair_octaves(f0, reference, confidence, isolated_runs=False):
++    """Require independent confident evidence before correcting octave errors."""
++    values=np.asarray(f0).copy()
++    valid=(values>0)&(reference>0)&(confidence>=.85)
++    delta=np.zeros(len(values));delta[valid]=12*np.log2(reference[valid]/values[valid])
++    octaves=np.round(delta/12).astype(int)
++    evidence=valid & (np.abs(octaves)>=1)&(np.abs(octaves)<=2)&(np.abs(delta-12*octaves)<1.)
++    correction=np.zeros(len(values),dtype=int)
++    # Require three consecutive reference frames, avoiding isolated PM errors.
++    for k in [-2,-1,1,2]:
++        ids=np.flatnonzero(evidence & (octaves==k))
++        if not len(ids):continue
++        for run in np.split(ids,np.flatnonzero(np.diff(ids)>1)+1):
++            if len(run)<3:continue
++            correction[run]=k
++            # Fill uncertain <=80ms edges of the same pitch plateau. Confident
++            # contradictory reference evidence stops propagation.
++            for edge,direction in [(run[0],-1),(run[-1],1)]:
++                for step in range(1,9):
++                    j=edge+direction*step;prev=j-direction
++                    if j<0 or j>=len(values) or values[j]<=0:break
++                    if abs(12*np.log2(values[j]/values[prev]))>4:break
++                    if valid[j] and (not evidence[j] or octaves[j]!=k):break
++                    correction[j]=k
++    values*=np.exp2(correction.astype(float))
++    islands=[]
++    if isolated_runs:
++        voiced=np.flatnonzero(values>0)
++        runs=np.split(voiced,np.flatnonzero(np.diff(voiced)>1)+1) if len(voiced) else []
++        for i in range(1,len(runs)-1):
++            run=runs[i];left=runs[i-1];right=runs[i+1]
++            if not 3<=len(run)<=20 or run[0]-left[-1]>30 or right[0]-run[-1]>30:continue
++            a=float(np.median(69+12*np.log2(values[left[-8:]]/440)))
++            b=float(np.median(69+12*np.log2(values[right[:8]]/440)))
++            middle=69+12*np.log2(values[run]/440)
++            if abs(a-b)<=3 and np.percentile(middle,10)>max(a,b)+7:
++                values[run]=440*np.exp2((np.linspace(a,b,len(run)+2)[1:-1]-69)/12)
++                islands.append({'start_frame':int(run[0]),'end_frame':int(run[-1]),'frames':len(run)})
++    return values,{'reference_octave_corrected_frames':int(np.sum(correction!=0)),
++                   'isolated_high_runs_repaired':islands,'island_correction_changes_melody':bool(islands)}
+diff --git a/tools/voice_profile_ui.py b/tools/voice_profile_ui.py
+new file mode 100644
+--- /dev/null
++++ b/tools/voice_profile_ui.py
+@@ -0,0 +1,33 @@
++import json
++import os
++from pathlib import Path
++from infer.voice_range import load_profile, profile_path, validate
++
++def model_path(name):
++    if not name or Path(name).name != name or not name.endswith('.pth'):
++        raise ValueError('Bitte ein vorhandenes Stimmprofil auswählen.')
++    path = Path(os.environ['weight_root']) / name
++    if not path.is_file():
++        raise ValueError('Modelldatei fehlt.')
++    return path
++
++def read_settings(name):
++    profile = load_profile(model_path(name))
++    if not profile:
++        return False, 'A2', 'C#4', 'Für dieses Modell ist noch keine Begrenzung gespeichert.'
++    return profile['enabled'], profile['min_note'], profile['max_note'], profile.get('description', 'Stimmumfang geladen.')
++
++def save_settings(name, enabled, minimum, maximum):
++    try:
++        path = model_path(name)
++        profile = load_profile(path) or {'schema_version': 1, 'mode':'octave_phrases', 'preserve_unvoiced':True}
++        profile.update(enabled=bool(enabled), min_note=str(minimum).strip(), max_note=str(maximum).strip())
++        validate(profile)
++        profile['description'] = 'Benutzerdefinierter Testbereich; die tatsächliche Singbarkeit ist durch Anhören zu prüfen.'
++        dest = profile_path(path)
++        temp = dest.with_suffix('.json.tmp')
++        temp.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding='utf-8')
++        temp.replace(dest)
++        return f'Gespeichert: {minimum} bis {maximum}. Gilt ab der nächsten Umwandlung für dieses Modell.'
++    except (ValueError, KeyError, OSError) as error:
++        return 'Nicht gespeichert: ' + str(error)

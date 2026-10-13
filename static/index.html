@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Music Generator</title>
+<title>Music Generator – Tapa Fork</title>
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -42,7 +42,52 @@
     </div>
   </header>
 
-  <section class="card">
+  <section class="mode-bar" aria-label="Ansichtsmodus">
+    <div><strong id="modeName">Simple Mode</strong><span class="small" id="modeDescription"></span></div>
+    <button type="button" id="modeSwitch" class="sek" aria-pressed="false" aria-controls="deepPanel">Deep Mode</button>
+  </section>
+  <section class="card" id="deepPanel" hidden>
+    <h2 class="col-title" data-i18n="deep_title">Originalsong bearbeiten</h2>
+    <p class="small" data-i18n="deep_intro">Hier wird die Originalaufnahme als musikalische Vorlage verwendet. Jede Bearbeitung wird als zusätzliche Fassung gespeichert.</p>
+    <form id="deepForm">
+      <label class="field"><span class="lbl" data-i18n="deep_source">Originalaufnahme aus der Bibliothek</span><select id="deepSource" required></select></label>
+      <div class="profile-actions"><button type="button" id="deepImport" class="sek" data-i18n="deep_import">Originalaufnahme importieren</button><button type="button" id="deepRefresh" class="sek" data-i18n="deep_refresh">Auswahl aktualisieren</button><input type="file" id="deepImportFile" accept=".wav,.mp3,.flac,.m4a,.ogg" hidden></div>
+      <p id="deepSourceInfo" class="small"></p>
+      <label class="field"><span class="lbl" data-i18n="deep_action">Was möchtest Du verändern?</span><select id="deepAction"><option value="cover-nofsq" data-i18n="deep_close">Originalnah neu arrangieren</option><option value="cover" data-i18n="deep_free">Freier neu arrangieren</option><option value="voice" data-i18n="deep_voice_only">Nur die Stimme austauschen</option></select></label>
+      <p class="small" id="deepActionHint"></p>
+      <div id="deepRemixOptions">
+        <label class="field"><span class="lbl" data-i18n="dit">Klangmodell</span><select id="deepSoundModel" aria-label="Klangmodell" data-i18n-aria="dit"><option value="default">Voreinstellung verwenden</option><option value="standard" data-i18n="dit_standard">Standard · SFT 2B</option><option value="xl" data-i18n="dit_xl">XL · SFT 4B</option></select><span class="small" data-i18n="deep_model_hint">Die Auswahl gilt für diesen Auftrag. Die allgemeine Voreinstellung bleibt erhalten.</span></label>
+        <p class="small" id="deepModelStatus" role="status" aria-live="polite"></p>
+        <label class="field"><span class="lbl" data-i18n="deep_version_title">Titel der neuen Fassung</span><input id="deepTitle" maxlength="160"></label>
+        <label class="field"><span class="lbl" data-i18n="deep_changes">Gewünschte Instrumentierung und Änderungen</span><textarea id="deepCaption" rows="3" maxlength="6000"></textarea></label>
+        <label class="field"><span class="lbl" data-i18n="deep_lyrics">Songtext · Abschnittsmarkierungen beibehalten</span><textarea id="deepLyrics" rows="8" maxlength="20000"></textarea></label>
+        <button type="button" id="deepSeparate" class="sek" data-i18n="deep_separate">Text und Akkorde trennen</button>
+        <label class="field"><span class="lbl" data-i18n="deep_chords">Akkorde und Zuordnung zu Abschnitten / Takten</span><textarea id="deepChords" rows="4" maxlength="6000"></textarea></label>
+        <p class="small" data-i18n="deep_chord_hint">Akkorde werden als Vorgaben für die Begleitung übergeben. Eine taktgenaue Umsetzung wird dadurch nicht garantiert. Für genaue Akkordtreue dient die Originalaufnahme als wichtigste Vorlage.</p>
+        <label class="field"><span class="lbl" data-i18n="deep_strength">Nähe zur Originalaufnahme</span><input id="deepStrength" type="range" min="0" max="95" value="80"><output id="deepStrengthValue">80</output></label>
+        <p class="small" data-i18n="deep_strength_hint">Höhere Werte lassen weniger Veränderung zu. Dies ist eine Gewichtung der Vorlage, kein gemessener Ähnlichkeitswert. Melodie, Aufbau und Klang können sich bei einer KI-Neufassung verändern.</p>
+        <div class="deep-grid">
+          <label class="field"><span class="lbl">BPM</span><input id="deepBpm" type="number" min="0" max="300" value="0"></label>
+          <label class="field"><span class="lbl" data-i18n="deep_key">Tonart</span><input id="deepKey" maxlength="40"></label>
+          <label class="field"><span class="lbl" data-i18n="deep_meter">Taktmaß</span><select id="deepMeter"><option value="4">4/4</option><option value="3">3/4</option><option value="6">6/8</option></select></label>
+        </div>
+        <p class="small" data-i18n="deep_metadata_hint">Tempo und Tonart werden aus vorhandenen Songdaten übernommen, soweit sie bekannt sind. Du kannst sie korrigieren; 0 BPM bedeutet keine zusätzliche Tempoangabe.</p>
+        <label class="check"><input id="deepInstrumental" type="checkbox"><span data-i18n="deep_instrumental">Neue Fassung ohne Gesang</span></label>
+        <label class="check"><input id="deepPreview" type="checkbox" checked><span data-i18n="deep_preview">Zuerst eine Vorschau erstellen</span></label>
+        <div class="deep-grid" id="deepPreviewFields">
+          <label class="field"><span class="lbl" data-i18n="deep_start">Vorschau ab Sekunde</span><input id="deepStart" type="number" min="0" max="600" step="0.1" value="0"></label>
+          <label class="field"><span class="lbl" data-i18n="deep_seconds">Länge · 5–30 Sekunden</span><input id="deepSeconds" type="number" min="5" max="30" step="1" value="20"></label>
+        </div>
+        <label class="field" id="deepVoiceField" hidden><span class="lbl" data-i18n="deep_final_voice">Vollfassung anschließend mit Stimmprofil erstellen</span><select id="deepVoice"></select></label>
+        <button type="button" class="sek mini" data-profile-library data-i18n="profiles_manage">Stimmprofile verwalten</button>
+      </div>
+      <div data-mix-levels="deep"></div>
+      <p id="deepStatus" class="voice-estimate" role="status" aria-live="polite"></p>
+      <p class="small" id="deepRequestSummary" aria-live="polite"></p>
+      <div class="submit"><button type="submit" id="deepSubmit" class="aktion" data-i18n="deep_submit">Vorschau erstellen</button></div>
+    </form>
+  </section>
+  <section class="card" id="simplePanel">
     <form id="genForm">
       <div class="field"><div class="lblrow"><span class="lbl" title="Nur zum Wiederfinden, hat keinen Einfluss auf die Musik." data-i18n-title="title_tip" data-i18n="title">Titel</span>
         <button type="button" id="titleDice" class="dice" title="Zufälligen Titel würfeln" aria-label="Zufälligen Titel würfeln" data-i18n-title="title_dice" data-i18n-aria="title_dice"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/></svg></button></div>
@@ -140,6 +185,23 @@
         </div>
       </details>
 
+      <details id="voiceGenBox" class="voice-section">
+        <summary data-i18n="voice_new">Mit meiner Stimme singen</summary>
+        <p class="small" data-i18n="voice_new_hint">Das Original bleibt erhalten. Anschließend entsteht eine zusätzliche Stimmversion.</p>
+        <label class="field"><span class="lbl" data-i18n="voice_profile">Stimmprofil</span><select id="genVoiceProfile"><option value="" data-i18n="voice_original">Originalstimme</option></select></label>
+        <button type="button" class="sek" data-profile-library data-i18n="profiles_manage">Stimmprofile verwalten</button>
+        <div id="genVoiceOptions" hidden>
+          <div class="voice-range">
+            <label class="field"><span class="lbl" data-i18n="voice_low">Tiefster Ton</span><input id="genVoiceLow" value="G2" maxlength="4"></label>
+            <label class="field"><span class="lbl" data-i18n="voice_high">Höchster Ton</span><input id="genVoiceHigh" value="C#4" maxlength="4"></label>
+          </div>
+          <label class="check"><input id="genVoiceRange" type="checkbox" checked><span data-i18n="voice_range">Stimmumfang berücksichtigen · natürliche Melodie priorisieren</span></label>
+          <div id="genVoiceLayers" class="voice-layer-controls"></div>
+          <label class="field"><span class="lbl" data-i18n="voice_quality">Verarbeitung</span><select id="genVoiceQuality"><option value="standard" data-i18n="voice_standard">Standard</option><option value="best" data-i18n="voice_best">Beste Qualität – Zeit zweitrangig</option></select></label>
+          <p class="small" id="genVoiceEstimate" role="status"></p>
+        </div>
+      </details>
+      <div data-mix-levels="gen"></div>
       <div class="genbar">
         <div class="field" style="margin-bottom:0"><span class="lbl" title="Anzahl Versionen desselben Prompts, jede mit eigenem Seed. In der Bibliothek heißen sie A, B, C …" data-i18n-title="versions_tip" data-i18n="versions">Versionen</span>
           <div class="genrow">
@@ -160,6 +222,7 @@
       <input id="search" type="search" placeholder="Suchen" data-i18n-ph="search">
       <button type="button" id="onlyFav" class="sek icon" aria-pressed="false" title="Nur Favoriten zeigen" aria-label="Nur Favoriten zeigen" data-i18n-title="only_fav" data-i18n-aria="only_fav">☆</button>
     </div>
+    <div class="voice-import"><button type="button" id="libraryImportBtn" class="sek" data-i18n="voice_import">Fertigen Song importieren</button><span id="libraryImportStatus" class="small" role="status"></span><input id="libraryImportFile" type="file" accept=".wav,.mp3,.flac,.m4a,.ogg" hidden></div>
     <div id="folderBar" class="folderbar"></div>
     <div id="library"></div>
   </section>
@@ -173,6 +236,7 @@
       <div id="waveform"></div>
     </div>
     <span id="pTime" class="time"></span>
+    <button id="compareBtn" type="button" class="sek voice-action" hidden></button>
     <div class="vol" id="vol">
       <button type="button" id="volBtn" class="sek icon" title="Stumm" aria-label="Stumm" data-i18n-title="mute" data-i18n-aria="mute">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -196,9 +260,10 @@
     <label class="field"><span class="lbl" data-i18n="timeout">Timeout (Min.)</span>
       <input name="timeout_minutes" type="number" min="1" max="600">
     </label>
-    <label class="field"><span class="lbl" title="" data-i18n-title="dit_tip" data-i18n="dit">Klangmodell</span>
-      <select name="dit"><option value="standard" data-i18n="dit_standard">Standard</option><option value="xl" data-i18n="dit_xl">XL</option></select>
-      <span class="small" id="ditHint" hidden data-i18n="dit_xl_missing"></span>
+    <label class="field"><span class="lbl" data-i18n="dit">Klangmodell</span>
+      <select name="dit"><option value="standard" data-i18n="dit_standard">Standard · SFT 2B</option><option value="xl" data-i18n="dit_xl">XL · SFT 4B</option></select>
+      <span class="small" data-i18n="dit_hint">XL benötigt mehr Grafikspeicher und Rechenzeit. Gilt für neue Songs und neue Arrangements; bestehende Aufnahmen bleiben erhalten.</span>
+      <span class="small" id="ditHint" hidden data-i18n="dit_xl_missing">XL fehlt. Im Installer zusätzlich herunterladen.</span>
     </label>
     <label class="field"><span class="lbl" title="Leer = data/songs im Programmordner. Beim Ändern werden die vorhandenen Songs dorthin verschoben." data-i18n-title="songs_dir_tip" data-i18n="songs_dir">Song-Ordner</span>
       <input name="songs_dir" placeholder="">
@@ -226,8 +291,63 @@
   </form>
 </dialog>
 
+<dialog id="voiceDlg" aria-labelledby="voiceDlgTitle">
+  <form id="voiceForm">
+    <h2 id="voiceDlgTitle" class="col-title" data-i18n="voice_convert">Mit anderer Stimme erstellen</h2>
+    <p id="voiceSongTitle"></p>
+    <p class="small" data-i18n="voice_hint">Text, Melodie und Begleitung stammen aus dem Original. Die neue Fassung wird zusätzlich gespeichert. Stimmumfangskorrekturen können die Tonlage verändern.</p>
+    <label class="field"><span class="lbl" data-i18n="voice_profile">Stimmprofil</span><select id="voiceProfile" required></select></label>
+    <button type="button" class="sek mini" data-profile-library data-i18n="profiles_manage">Stimmprofile verwalten</button>
+    <p id="voiceBackingHint" class="small" hidden data-i18n="instrumental_backing_hint">Die gespeicherte Instrumentalbegleitung bleibt erhalten. Text und Gesangsmelodie stammen aus der ursprünglichen Gesangsvorlage.</p>
+    <div class="voice-range">
+      <label class="field"><span class="lbl" data-i18n="voice_low">Tiefster Ton</span><input id="voiceLow" required value="G2" maxlength="4"></label>
+      <label class="field"><span class="lbl" data-i18n="voice_high">Höchster Ton</span><input id="voiceHigh" required value="C#4" maxlength="4"></label>
+    </div>
+    <label class="check"><input id="voiceRange" type="checkbox" checked><span data-i18n="voice_range">Stimmumfang berücksichtigen · natürliche Melodie priorisieren</span></label>
+    <button type="button" class="sek mini" id="voiceSaveRange" data-i18n="voice_save_range">Als Profilvorgabe speichern</button>
+    <div id="voiceLayers" class="voice-layer-controls"></div>
+    <label class="field voice-quality"><span class="lbl" data-i18n="voice_quality">Verarbeitung</span><select id="voiceQuality"><option value="standard" data-i18n="voice_standard">Standard</option><option value="best" data-i18n="voice_best">Beste Qualität – Zeit zweitrangig</option></select></label>
+    <p id="voiceQualityHint" class="small"></p>
+    <div data-mix-levels="voice"></div>
+    <label class="check"><input id="voicePreview" type="checkbox"><span data-i18n="voice_preview">Zunächst 20 Sekunden Vorschau erstellen</span></label>
+    <label class="field" id="voicePreviewField" hidden><span class="lbl" data-i18n="voice_preview_start">Vorschau ab Sekunde</span><input id="voicePreviewStart" type="number" min="0" step="0.1" value="30"></label>
+    <label class="field" id="voicePreviewLengthField" hidden><span class="lbl" data-i18n="voice_preview_length">Länge des Ausschnitts in Sekunden (5–30)</span><input id="voicePreviewLength" type="number" min="5" max="30" step="0.1" value="20"></label>
+    <p id="voiceSectionHint" class="small" hidden data-i18n="voice_section_hint">Bearbeite zunächst einen Ausschnitt. Nach dem Anhören kannst Du ihn in eine neue Vollfassung übernehmen.</p>
+    <p id="voiceEstimate" class="voice-estimate" role="status" aria-live="polite"></p>
+    <p class="small" data-i18n="voice_estimate_note">Schätzung ohne Wartezeit. Andere GPU-Aufgaben können die Dauer verändern. Mehr Rechenzeit garantiert kein besseres Ergebnis.</p>
+    <div class="submit"><button type="button" id="voiceClose" class="sek" data-i18n="cancel">Abbrechen</button><button type="submit" id="voiceStart" class="aktion" data-i18n="voice_start">STIMMVERSION ERSTELLEN</button></div>
+  </form>
+</dialog>
+<dialog id="profileLibraryDlg" aria-labelledby="profileLibraryTitle">
+  <h2 id="profileLibraryTitle" data-i18n="profiles_manage">Stimmprofile verwalten</h2>
+  <p class="small" data-i18n="profiles_hint">Importiere trockene Soloaufnahmen einer einzelnen Stimme. Ab 30 Sekunden, besser mehrere Minuten ohne Musik, Hall und Doppelungen. Verwende eigene oder ausdrücklich freigegebene Stimmen. Das Training läuft lokal auf der NVIDIA-Grafikkarte.</p>
+  <form id="profileImportForm">
+    <label class="field"><span class="lbl" data-i18n="profiles_name">Name des neuen Stimmprofils</span><input id="profileName" required maxlength="80"></label>
+    <label class="field"><span class="lbl" data-i18n="profiles_recordings">Soloaufnahmen · WAV, MP3, FLAC, M4A, OGG</span><input id="profileFiles" type="file" accept=".wav,.mp3,.flac,.m4a,.ogg" multiple required></label>
+    <button type="submit" id="profileImport" class="aktion" data-i18n="profiles_import">Aufnahmen einlesen</button>
+  </form>
+  <p id="profileLibraryStatus" class="small" role="status" aria-live="polite"></p>
+  <div id="profileLibraryItems"></div>
+  <details id="profileTrash" hidden><summary data-i18n="profiles_trash">Papierkorb</summary><p class="small" data-i18n="profiles_trash_note">Entfernte Einträge verschwinden aus der Verwaltung und dem Auswahlmenü. Dateien bleiben für die Wiederherstellung gespeichert. Bereits erzeugte Songs bleiben erhalten.</p><div id="profileTrashItems"></div></details>
+  <p class="small" data-i18n="profiles_note">Erst ein erfolgreich trainiertes und technisch geprüftes Profil erscheint im Auswahlmenü. Mehr Trainingsrunden garantieren kein besseres Ergebnis. Die Stimmähnlichkeit und die vorläufigen Umfangsgrenzen bitte anschließend mit einem anderen Song prüfen.</p>
+  <div class="submit"><button type="button" class="sek" id="profileLibraryClose" data-i18n="close">Schließen</button></div>
+</dialog>
+<dialog id="instrumentalDlg" aria-labelledby="instrumentalTitle">
+  <form id="instrumentalForm">
+    <h2 id="instrumentalTitle" data-i18n="instrumental_create">Instrumental erstellen</h2>
+    <p id="instrumentalSongTitle"></p>
+    <p class="small" data-i18n="instrumental_hint">Der Gesang wird aus genau dieser Songfassung entfernt. Eine zusätzliche Instrumentalversion wird gespeichert; Original und Gesangsvorlage bleiben erhalten. Später kannst Du darauf andere Stimmprofile ausprobieren. Text und Gesangsmelodie bleiben dabei die der Vorlage. Kleine Gesangsreste oder Trennartefakte sind möglich.</p>
+    <label class="field"><span class="lbl" data-i18n="voice_quality">Verarbeitung</span><select id="instrumentalQuality"><option value="best" data-i18n="voice_best">Beste Qualität – Zeit zweitrangig</option><option value="standard" data-i18n="voice_standard">Standard</option></select></label>
+    <p id="instrumentalStatus" class="small" role="status"></p>
+    <div class="submit"><button type="button" class="sek" id="instrumentalClose" data-i18n="cancel">Abbrechen</button><button type="submit" class="aktion" id="instrumentalStart" data-i18n="instrumental_create">Instrumental erstellen</button></div>
+  </form>
+</dialog>
 <script src="/static/vendor/wavesurfer.min.js"></script>
 <script src="/static/i18n.js"></script>
 <script src="/static/app.js"></script>
+<script src="/static/voices.js"></script>
+<script src="/static/profile-library.js"></script>
+<script src="/static/mix-levels.js"></script>
+<script src="/static/deep.js"></script>
 </body>
 </html>

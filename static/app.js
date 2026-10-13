@@ -6,7 +6,8 @@ const api = async (path, opts = {}) => {
   const r = await fetch(path, { ...opts, headers });
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
-    throw new Error(typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail) || r.statusText);
+    const detail=Array.isArray(err.detail)?err.detail.map(item=>(item.msg||r.statusText).replace(/^Value error, /,"")).join("\n"):err.detail;
+    throw new Error(typeof detail === "string" ? detail : r.statusText);
   }
   return r.json();
 };
@@ -38,7 +39,7 @@ let editingId = null;   // id des Songs, dessen Titel gerade bearbeitet wird
 let played = new Set();
 try { played = new Set(JSON.parse(localStorage.getItem("played") || "[]")); } catch {}
 const markPlayed = (id) => { played.add(id); try { localStorage.setItem("played", JSON.stringify([...played])); } catch {} };
-const genTime = (s) => { const t = (Date.parse(s.finished_at) - Date.parse(s.created_at)) / 1000; return isFinite(t) && t >= 0 ? fmt(t) : null; };
+const genTime = (s) => { const t = s.result_meta?.elapsed_seconds ?? s.result_meta?.generation_seconds ?? (Date.parse(s.finished_at) - Date.parse(s.created_at)) / 1000; return isFinite(t) && t >= 0 ? fmt(t) : null; };
 
 // Würfel: zufälliger Prompt (Stimmung, Szene, Detail); der Stil bleibt deine Wahl
 const R = {
@@ -152,6 +153,8 @@ function readForm() {
     duration: Number(form.duration.value), bpm: Number(form.bpm.value) <= Number(form.bpm.min) ? 0 : Number(form.bpm.value), keyscale: d.keyscale || "", timesignature: d.timesignature || "", vocal_language: form.instrumental.checked ? "" : d.vocal_language || "en",
     seed: num("seed", -1), variants: num("variants", 1),
     inference_steps: Number(form.inference_steps.value), lm_temperature: Number(form.lm_temperature.value),
+    voice_after: window.voiceGenerationRequest?.() || null,
+    mix_levels: window.mixLevelRequest?.('gen') || {},
   };
 }
 
@@ -284,7 +287,18 @@ function render() {
     const m = s.result_meta || {}, p = s.params || {};
     const newGroup = i > 0 && songs[i - 1].group_id !== s.group_id;
     const title = (s.title || s.caption.split(",").slice(0, 3).join(",")) + (s.letter ? ` ${s.letter}` : "");
+    const voice = p.job_type === "voice" ? p.voice : null;
+    const instrumental = p.job_type === "instrumental";
+    const originalEdit = p.job_type === 'deep';
+    const preview = voice?.preview || p.deep?.preview;
+    const profileName = m.voice_profile || (voice && window.voiceProfileName?.(voice.profile_id));
     const meta = [
+      p.library_role && t(`voice_role_${p.library_role}`),
+      instrumental && t('instrumental_version'),
+      originalEdit && t(p.deep.preview?'deep_result_preview':'deep_result'),
+      !voice && !instrumental && !originalEdit && !p.library_role && t(p.imported ? "voice_role_import" : "voice_role_original"),
+      voice && `${profileName || "Stimme"} · ${voice.preview ? t(voice.base_song_id ? "voice_section_preview" : "voice_preview_short") : t("voice_version")} · ${t(voice.quality === "best" ? "voice_best_short" : "voice_standard")}`,
+      m.sound_model && (m.sound_model.includes('xl-sft')?'XL · SFT 4B':'SFT 2B'),
       m.bpm && `${m.bpm}BPM`,
       p.inference_steps ? `${p.inference_steps}IT` : null,
       p.lm_temperature != null ? `${(+p.lm_temperature).toFixed(1)}VAR` : null,
@@ -305,11 +319,24 @@ function render() {
     const lyr = s.status === "done" && s.lyrics !== "[Instrumental]" && /[^\s\[\]]/.test((m.lyrics || "").replace(/\[[^\]]*\]/g, "")) ? m.lyrics.trim() : "";
     const actions = [
       s.status === "done" && `<button class="sek icon ${s.favorite ? "on" : ""}" data-a="fav" title="${t("fav")}">${s.favorite ? "★" : "☆"}</button>`,
+      s.status === "done" && !preview && p.library_role !== "final" && `<button class="sek voice-action" data-a="final">${t("voice_mark_final")}</button>`,
       s.status === "done" && `<a class="download icon fmt" href="${s.url}?download=1" title="${t("download")}">${s.file.endsWith(".wav") ? "WAV" : "MP3"}</a>`,
+      s.status === "done" && `<button class="sek voice-action" data-a="voice" title="${t("voice_convert")}">${t(instrumental?'instrumental_voice':'voice_button')}</button>`,
+      s.status === "done" && !instrumental && !preview && s.lyrics!=='[Instrumental]' && `<button class="sek voice-action" data-a="instrumental">${t('instrumental_create')}</button>`,
+      s.status === "done" && !preview && `<button class="sek voice-action deep-library-action" data-a="deep">Deep Mode</button>`,
+      s.status === "done" && p.deep?.preview && p.deep.source_song_id && `<button class="aktion voice-action" data-a="deep-full" title="${t('deep_from_preview_hint')}" ${window.deepFullPending?.(s.id)?'disabled':''}>${t('deep_from_preview')}</button>`,
+      s.status === "done" && `<button class="sek voice-action" data-a="octave">${t("voice_octave_correct")}</button>`,
+      s.status === "done" && (voice||instrumental) && `<a class="download icon fmt" href="/api/songs/${s.id}/voice-audio?kind=mp3" title="${t("download")}">MP3</a>`,
+      s.status === "done" && voice && `<a class="download icon fmt" href="/api/songs/${s.id}/voice-audio" title="${t("voice_solo")}">VOX</a>`,
+      s.status === "done" && voice && m.harmony?.enabled && !m.section_patch && `<a class="download voice-action" href="/api/songs/${s.id}/voice-audio?kind=lead">${t("voice_lead_short")}</a>`,
+      s.status === "done" && voice && m.harmony?.enabled && !m.section_patch && `<a class="download voice-action" href="/api/songs/${s.id}/voice-audio?kind=harmony">${t("voice_harmony_short")}</a>`,
+      s.status === "done" && (voice||originalEdit) && `<button class="sek voice-action" data-a="original" title="${t("voice_play_original")}">${t("voice_original_short")}</button>`,
+      s.status === "done" && voice && !voice.preview && `<button class="sek voice-action" data-a="section">${t("voice_section")}</button>`,
+      s.status === "done" && voice?.preview && voice.base_song_id && `<button class="sek voice-action" data-a="apply-section">${t("voice_apply_section")}</button>`,
       lyr && `<button class="sek icon txt ${openLyrics.has(s.id) ? "on" : ""}" data-a="lyrics" title="${t("show_lyrics")}">TXT</button>`,
       folders.folders.length > 0 && `<button class="sek icon" data-a="move" title="${t("move")}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>`,
-      `<button class="sek icon" data-a="more" title="${t("more")}">＋</button>`,
-      `<button class="sek icon" data-a="reuse" title="${t("reuse")}"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M12 3l7 7h-4v10h-6V10H5l7-7z"/></svg></button>`,
+      !p.imported && `<button class="sek icon" data-a="more" title="${t("more")}">＋</button>`,
+      !p.imported && `<button class="sek icon" data-a="reuse" title="${t("reuse")}"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M12 3l7 7h-4v10h-6V10H5l7-7z"/></svg></button>`,
       ["error", "cancelled"].includes(s.status) && `<button class="sek icon" data-a="retry" title="${t("retry")}">↻</button>`,
       `<button class="sek icon del" data-a="del" title="${["queued", "running"].includes(s.status) ? t("cancel") : t("del")}">✕</button>`,
     ].filter(Boolean).join("");
@@ -318,7 +345,7 @@ function render() {
       <div style="min-width:0">${s.id === editingId
         ? `<input class="t-edit" data-id="${s.id}" value="${esc(s.title || "")}" placeholder="${esc(s.caption.split(",").slice(0, 3).join(","))}">`
         : `<div class="t" data-a="rename" title="${t("rename")}">${esc(title)}</div>`
-      }<div class="m" title="${t("meta_tip")}">${esc(meta)}</div>${state}</div>
+      }<div class="m" title="${t("meta_tip")}">${esc(meta)}</div>${voice ? `<div class="small voice-parent">${t("voice_from_original")}${m.applied_sections?.length ? ` · ${t("voice_sections_applied",m.applied_sections.length)}` : ""}</div>` : ""}${state}${m.warnings?.length ? `<div class="s voice-warning">${esc(m.warnings.join(" "))}</div>` : ""}${window.voiceReviewMarkup?.(s)||""}</div>
       <div class="actions">${actions}</div>${lyr && openLyrics.has(s.id)
         ? `<div class="lyr-wrap"><pre class="lyr">${esc(lyr)}</pre><a class="download mini lyr-dl" download="${esc((title || s.id).replace(/[\\/:*?"<>|]+/g, "_"))}.txt" href="data:text/plain;charset=utf-8,${encodeURIComponent(lyr)}" title="${t("lyrics_dl")}">TXT ↓</a></div>`
         : ""}</div>`;
@@ -340,8 +367,18 @@ $("#library").addEventListener("click", async (e) => {
   const id = btn.closest(".song").dataset.id, s = songs.find((x) => x.id === id);
   const a = btn.dataset.a;
   if (a === "play") return play(s);
+  if (a === "voice") return window.openVoiceDialog(s);
+  if (a === "deep") return window.openDeepSong(s);
+  if (a === "deep-full") return window.createDeepFullSong(s);
+  if (a === "instrumental") return window.openInstrumentalDialog(s);
+  if (a === "octave") return window.openVoiceDialog(s,false,true);
+  if (a === "original") return window.compareVoice(s);
+  if (a === "review") return play(s, Math.max(0,Number(btn.dataset.time)-.5));
+  if (a === "section") return window.openVoiceDialog(s,true);
+  if (a === "apply-section") return window.applyVoiceSection(s);
   if (a === "rename") { editingId = id; render(); const inp = $(`.t-edit[data-id="${id}"]`); inp?.focus(); inp?.select(); return; }
   if (a === "fav") await api(`/api/songs/${id}`, { method: "PATCH", body: JSON.stringify({ favorite: !s.favorite }) });
+  if (a === "final") await api(`/api/songs/${id}`, { method: "PATCH", body: JSON.stringify({ library_role:"final",favorite:true }) });
   if (a === "reuse") return fillForm(s);
   if (a === "move") return moveMenu(btn, id);
   if (a === "lyrics") { openLyrics.has(id) ? openLyrics.delete(id) : openLyrics.add(id); return render(); }
@@ -499,9 +536,12 @@ function initVolume() {
   applyVolume();
 }
 
-async function play(s) {
+async function play(s, position = null) {
   if (!ws) initPlayer();
-  if (currentId === s.id) return ws.playPause();
+  if (currentId === s.id) {
+    if(position!==null){ws.setTime(Math.min(position,ws.getDuration()));return ws.play();}
+    return ws.playPause();
+  }
   if (!played.has(s.id)) { markPlayed(s.id); render(); }
   currentId = s.id;
   $("#player").hidden = false;
@@ -512,6 +552,8 @@ async function play(s) {
   $("#pTitle").textContent = s.title || s.caption;
   $("#pTitle").title = `Seed ${s.seed}` + (s.result_meta?.keyscale ? ` · ${s.result_meta.keyscale}` : "");
   await ws.load(s.url);
+  if(position!==null)ws.setTime(Math.min(position,Math.max(0,ws.getDuration()-.01)));
+  window.onSongPlayback?.(s);
   ws.play();
   render();
 }
@@ -531,14 +573,14 @@ const dlg = $("#settingsDlg"), sf = $("#settingsForm");
 $("#btnSettings").onclick = async () => {
   const s = await api("/api/settings");
   for (const k of ["server_url", "lm_url", "timeout_minutes", "songs_dir", "dit"]) sf[k].value = s[k];
-  sf.dit.querySelector('option[value="xl"]').disabled = !s.dit_xl_available;   // XL nur wählbar, wenn die Datei da ist
-  $("#ditHint").hidden = s.dit_xl_available;
+  sf.dit.querySelector('option[value="xl"]').disabled=!s.dit_xl_available;
+  $('#ditHint').hidden=s.dit_xl_available;
   sf.songs_dir.placeholder = s.songs_dir_default;   // Standard als Platzhalter, leer lassen = Standard
   dlg.showModal();
 };
 const saveSettings = () => api("/api/settings", { method: "PUT", body: JSON.stringify({
   server_url: sf.server_url.value.trim(), lm_url: sf.lm_url.value.trim(), timeout_minutes: Number(sf.timeout_minutes.value) || 30,
-  songs_dir: sf.songs_dir.value.trim(), dit: sf.dit.value }) }).catch((err) => { alert(err.message); $("#btnSettings").click(); });
+  songs_dir: sf.songs_dir.value.trim(),dit:sf.dit.value }) }).then(result=>{document.dispatchEvent(new Event('settingschange'));return result;}).catch((err) => { alert(err.message); $("#btnSettings").click(); });
 // Anordnung: untereinander oder Generator links / Bibliothek rechts
 function setLayout(l) {
   document.querySelector(".wrap").classList.toggle("side", l === "side");
@@ -555,11 +597,13 @@ async function updCheck() {
   updApply.hidden = true; updList.hidden = true; updInfo.className = "small"; updInfo.textContent = t("upd_search");
   const r = await api("/api/update/check").catch(e => ({ ok: false, error: e.message }));
   if (!r.ok) { updInfo.className = "small err-t"; updInfo.textContent = r.error; return; }
-  if (!r.behind) { updInfo.textContent = t("upd_current", r.current); return; }
+  if (!r.behind) { updInfo.textContent = t(r.fork?"upd_fork_current":"upd_current", r.current); return; }
   updInfo.textContent = t("upd_new", r.behind, r.current, r.latest);
   updList.replaceChildren(...r.changes.map(c => Object.assign(document.createElement("li"), { textContent: c })));
   updList.hidden = false;
+  if (r.fork) { updInfo.textContent += t("upd_fork_merge"); return; }
   if (r.dirty) { updInfo.className = "small err-t"; updInfo.textContent += t("upd_dirty"); return; }
+  if (r.apply_allowed===false) { updInfo.textContent += t("upd_dirty"); return; }
   if (r.needs_install) updInfo.textContent += t("upd_install");
   updApply.hidden = false;
 }

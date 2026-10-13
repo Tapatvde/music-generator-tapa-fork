@@ -1,0 +1,404 @@
+{
+  "schema_version": 1,
+  "rvc_revision": "81eed5e8f68b6bed1789f682fe78cdd324495afc",
+  "python_version": "3.12.15",
+  "uv_version": "0.13.0",
+  "assets": [
+    {
+      "id": "uv",
+      "url": "https://github.com/astral-sh/uv/releases/download/0.13.0/uv-x86_64-pc-windows-msvc.zip",
+      "cache_name": "uv.zip",
+      "sha256": "088962f9e7b7bd9ea740c04c650b2a21c8928c345bd99ac24350dc924dba656c",
+      "kind": "zip",
+      "license": "MIT OR Apache-2.0",
+      "bytes": 15722003,
+      "executable_sha256": "2bfbe53d3cc95799e98fa08323b04844fc01d4f8c87dd5c00089e43f6554f162"
+    },
+    {
+      "id": "rvc-source",
+      "url": "https://codeload.github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI/zip/81eed5e8f68b6bed1789f682fe78cdd324495afc",
+      "cache_name": "rvc-source.zip",
+      "kind": "zip",
+      "license": "MIT",
+      "sha256": "c0427564fbeb584d1a4805a5e71b5897132a41b9029a0fa9f417497a6df13e43",
+      "bytes": 821646
+    },
+    {
+      "id": "python",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261009/cpython-3.12.15%2B20261009-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "cache_name": "python-runtime.tar.gz",
+      "sha256": "11ed9f8a6ac64fb1b5a55e40e305a6744a3f77a70863c8f8197a6e4349abc64a",
+      "kind": "tar",
+      "license": "PSF-2.0 and bundled component licenses",
+      "bytes": 22011208,
+      "executable_sha256": "86c4690be87a6bb6be1affe24b3c1b67ceedc86b477d6cde9f812fafd0f6d3b9"
+    },
+    {
+      "id": "ace-ace-server.exe",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ace-server.exe",
+      "cache_name": "ace-ace-server.exe",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ace-server.exe",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "caed09ca26245dcad8f276d0f5b764f20edbe5d8391ab30d4af6be13301a8aab",
+      "bytes": 1431552
+    },
+    {
+      "id": "ace-ggml-base.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-base.dll",
+      "cache_name": "ace-ggml-base.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-base.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "ae87be3ace6f19d9317fc9eeb49760f4a0970204e6444b438c87c54735372560",
+      "bytes": 693248
+    },
+    {
+      "id": "ace-ggml-cpu-alderlake.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-alderlake.dll",
+      "cache_name": "ace-ggml-cpu-alderlake.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-alderlake.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "c4870b4e067d55968274182619a7ddf3d9467e2381727e84408bd89c022572ce",
+      "bytes": 1011200
+    },
+    {
+      "id": "ace-ggml-cpu-cannonlake.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-cannonlake.dll",
+      "cache_name": "ace-ggml-cpu-cannonlake.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-cannonlake.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "b7ba23a603710db6eb3630bc21aa0d6efcce2c1bedc75e5d662dd50d0c2825cf",
+      "bytes": 1051648
+    },
+    {
+      "id": "ace-ggml-cpu-cascadelake.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-cascadelake.dll",
+      "cache_name": "ace-ggml-cpu-cascadelake.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-cascadelake.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "68003e14d7a32a84259c575642f4c31d7d498d35e518cff70941fe739c422789",
+      "bytes": 1062912
+    },
+    {
+      "id": "ace-ggml-cpu-haswell.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-haswell.dll",
+      "cache_name": "ace-ggml-cpu-haswell.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-haswell.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "b8425c82df457442425dc1e888272d8ae954f10a068a08ea4366a0b1f5673a29",
+      "bytes": 1012224
+    },
+    {
+      "id": "ace-ggml-cpu-icelake.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-icelake.dll",
+      "cache_name": "ace-ggml-cpu-icelake.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-icelake.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "6d6bcc4d2fe1234b20856a173925901a27552f8285c1b9f201e2a8c6afa5d00a",
+      "bytes": 1062912
+    },
+    {
+      "id": "ace-ggml-cpu-sandybridge.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-sandybridge.dll",
+      "cache_name": "ace-ggml-cpu-sandybridge.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-sandybridge.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "c155878713ef0b03620207d8ea8144c96620bd9c0587ca59097b5a3f78ea806c",
+      "bytes": 1027584
+    },
+    {
+      "id": "ace-ggml-cpu-skylakex.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-skylakex.dll",
+      "cache_name": "ace-ggml-cpu-skylakex.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-skylakex.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "8f0e90d465d9bdf7fbeb87471de4ca4ebc397ece9204a2bc53c0f9b9853a9d1a",
+      "bytes": 1051648
+    },
+    {
+      "id": "ace-ggml-cpu-sse42.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-sse42.dll",
+      "cache_name": "ace-ggml-cpu-sse42.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-sse42.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "13cb0565b3465888e67a3bcb22691a834fa949d80b4d4bd85e8a9d7a9a7333d4",
+      "bytes": 864768
+    },
+    {
+      "id": "ace-ggml-cpu-x64.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-x64.dll",
+      "cache_name": "ace-ggml-cpu-x64.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cpu-x64.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "9dc115cf281799778c7ffd0a5e641a5019542399a7f845511030334c28a2506f",
+      "bytes": 868864
+    },
+    {
+      "id": "ace-ggml-cuda.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cuda.dll",
+      "cache_name": "ace-ggml-cuda.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-cuda.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "2eeffd1561695d01a924782d89df7054ff6892b61a682456ab7e5a0664f0482c",
+      "bytes": 127867392
+    },
+    {
+      "id": "ace-ggml-vulkan.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-vulkan.dll",
+      "cache_name": "ace-ggml-vulkan.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml-vulkan.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "a01306174c500e3d6015332ebffe20c1549f35e4cf0a201b5844f8748018ccff",
+      "bytes": 43645952
+    },
+    {
+      "id": "ace-ggml.dll",
+      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml.dll",
+      "cache_name": "ace-ggml.dll",
+      "kind": "file",
+      "target": "engine/acestep.cpp/build/Release/ggml.dll",
+      "mutable_url": true,
+      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
+      "sha256": "bd1339284fd2f00d2a6bf46c460c82a767c2e68e3b231de3e654554d9ee844ad",
+      "bytes": 62464
+    },
+    {
+      "id": "cuda13-cublas",
+      "url": "https://files.pythonhosted.org/packages/10/f5/f50bc3f5c2bb57ab8f5b4d78bc1146b57810d42cb8fcb28cbe2e14050376/nvidia_cublas-13.1.0.3-py3-none-win_amd64.whl",
+      "cache_name": "nvidia_cublas-13.1.0.3-py3-none-win_amd64.whl",
+      "sha256": "2a3b94a37def342471c59fad7856caee4926809a72dd5270155d6a31b5b277be",
+      "bytes": 404355960,
+      "kind": "zip",
+      "native_library": true,
+      "license": "NVIDIA CUDA EULA"
+    },
+    {
+      "id": "msvc-libraries",
+      "url": "https://files.pythonhosted.org/packages/21/3b/134d04268ab8e35853cd007582076429b45d60d6abb1036d159be9c50342/msvc_runtime-14.44.35112-cp312-cp312-win_amd64.whl",
+      "cache_name": "msvc_runtime-14.44.35112-cp312-cp312-win_amd64.whl",
+      "sha256": "32f9c706009e16ccc319d6947ce3bffe20e5192bee52b18cf48313f9e7bedfbe",
+      "bytes": 1921899,
+      "kind": "zip",
+      "native_library": true,
+      "license": "Microsoft Visual C++ runtime redistribution license"
+    }
+  ],
+  "models": [
+    {
+      "id": "ace-model-vae-BF16.gguf",
+      "url": "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/666ac70204440867d8c01ba4b119cc79c95b370a/vae-BF16.gguf",
+      "target": "engine/acestep.cpp/models/vae-BF16.gguf",
+      "sha256": "0599862ac5d15cd308e1d2e368373aea6c02e25ebd1737ad4a4562a0901b0ef8",
+      "bytes": 337420928,
+      "kind": "file",
+      "group": "ace",
+      "license": "MIT as declared by the GGUF repository"
+    },
+    {
+      "id": "ace-model-Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "url": "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/666ac70204440867d8c01ba4b119cc79c95b370a/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "target": "engine/acestep.cpp/models/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "sha256": "972f23255e46adfe744a0eb9a0039f3c63988f65753b0968d776e8b27168c321",
+      "bytes": 784144960,
+      "kind": "file",
+      "group": "ace",
+      "license": "MIT as declared by the GGUF repository"
+    },
+    {
+      "id": "ace-model-acestep-v15-sft-Q8_0.gguf",
+      "url": "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/666ac70204440867d8c01ba4b119cc79c95b370a/acestep-v15-sft-Q8_0.gguf",
+      "target": "engine/acestep.cpp/models/acestep-v15-sft-Q8_0.gguf",
+      "sha256": "17f1984e48aaab27b3eb8ccbf0b754a6656e677884c60ea7003845cfc0059b70",
+      "bytes": 2549527936,
+      "kind": "file",
+      "group": "ace",
+      "license": "MIT as declared by the GGUF repository"
+    },
+    {
+      "id": "ace-model-acestep-v15-xl-sft-Q8_0.gguf",
+      "url": "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/666ac70204440867d8c01ba4b119cc79c95b370a/acestep-v15-xl-sft-Q8_0.gguf",
+      "target": "engine/acestep.cpp/models/acestep-v15-xl-sft-Q8_0.gguf",
+      "sha256": "d7b06fadab214375ef5ebcfa44bf4a10489ea364b119f5b9ecbcd870408bdab9",
+      "bytes": 5305828704,
+      "kind": "file",
+      "group": "ace",
+      "license": "MIT as declared by the GGUF repository"
+    },
+    {
+      "id": "ace-model-acestep-5Hz-lm-0.6B-Q8_0.gguf",
+      "url": "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/666ac70204440867d8c01ba4b119cc79c95b370a/acestep-5Hz-lm-0.6B-Q8_0.gguf",
+      "target": "engine/acestep.cpp/models/acestep-5Hz-lm-0.6B-Q8_0.gguf",
+      "sha256": "bdaf9e292d4470f31c19cafeaca1b74936a114667e3a85e5d33b65247e9908ec",
+      "bytes": 709846656,
+      "kind": "file",
+      "group": "ace",
+      "license": "MIT as declared by the GGUF repository"
+    },
+    {
+      "id": "ace-model-acestep-5Hz-lm-1.7B-Q8_0.gguf",
+      "url": "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/666ac70204440867d8c01ba4b119cc79c95b370a/acestep-5Hz-lm-1.7B-Q8_0.gguf",
+      "target": "engine/acestep.cpp/models/acestep-5Hz-lm-1.7B-Q8_0.gguf",
+      "sha256": "726f99a82f050b32ebc5c5e36acaa9d7acd06bfe5e579a62b00e0d0d6d0b7ec6",
+      "bytes": 1975837568,
+      "kind": "file",
+      "group": "ace",
+      "license": "MIT as declared by the GGUF repository"
+    },
+    {
+      "id": "ace-model-acestep-5Hz-lm-4B-Q8_0.gguf",
+      "url": "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/666ac70204440867d8c01ba4b119cc79c95b370a/acestep-5Hz-lm-4B-Q8_0.gguf",
+      "target": "engine/acestep.cpp/models/acestep-5Hz-lm-4B-Q8_0.gguf",
+      "sha256": "972f91147a167f0c041f1b158d67985a82c0f6a852e68cdf70e46030cf08b1bc",
+      "bytes": 4457323648,
+      "kind": "file",
+      "group": "ace",
+      "license": "MIT as declared by the GGUF repository"
+    },
+    {
+      "id": "rvc-hubert_base/config.json",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/hubert_base/config.json",
+      "target": "engine/rvc/assets/hubert_base/config.json",
+      "sha256": "0346950779dfb7f9316fa74ed846e2b8a22a08eedfdc5387b73f327cb1a4a7cf",
+      "bytes": 1492,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-hubert_base/preprocessor_config.json",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/hubert_base/preprocessor_config.json",
+      "target": "engine/rvc/assets/hubert_base/preprocessor_config.json",
+      "sha256": "7c1976a680fb7acc757cd36fb08eef878fa36c70b4c9d2d595df9c608bbbbf0e",
+      "bytes": 225,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-hubert_base/pytorch_model.bin",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/hubert_base/pytorch_model.bin",
+      "target": "engine/rvc/assets/hubert_base/pytorch_model.bin",
+      "sha256": "cc8c20f4b90a520757260197a3ff2505705a7adbd20ad9eeaa4e1a9b38442ef5",
+      "bytes": 189206711,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-rmvpe.pt",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/rmvpe.pt",
+      "target": "engine/rvc/assets/rmvpe/rmvpe.pt",
+      "sha256": "6d62215f4306e3ca278246188607209f09af3dc77ed4232efdd069798c4ec193",
+      "bytes": 181184272,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-pretrained_v2/f0G40k.pth",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/pretrained_v2/f0G40k.pth",
+      "target": "engine/rvc/assets/pretrained_v2/f0G40k.pth",
+      "sha256": "3b2c44035e782c4b14ddc0bede9e2f4a724d025cd073f736d4f43708453adfcb",
+      "bytes": 73106273,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-pretrained_v2/f0D40k.pth",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/pretrained_v2/f0D40k.pth",
+      "target": "engine/rvc/assets/pretrained_v2/f0D40k.pth",
+      "sha256": "6b6ab091e70801b28e3f41f335f2fc5f3f35c75b39ae2628d419644ec2b0fa09",
+      "bytes": 142875703,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-mute.zip",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/mute.zip",
+      "target": "engine/rvc/.model-downloads/mute.zip",
+      "sha256": "ee948e85213e4ed2f2ba2f8dfcee810bfd0b63131d91450e920bbe1cbd0321d0",
+      "bytes": 312273,
+      "group": "rvc",
+      "kind": "zip",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-ffmpeg.exe",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/ffmpeg.exe",
+      "target": "engine/rvc/ffmpeg.exe",
+      "sha256": "b6a4d917a444790f4c06ada640c1c0c95aecde2f8953ed8d0dfb19352500bfcd",
+      "bytes": 52925440,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "rvc-ffprobe.exe",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/ffprobe.exe",
+      "target": "engine/rvc/ffprobe.exe",
+      "sha256": "2da5b980a9a14a808f423d181c4ed51c2b8af11b1366699f3f7eab0609926f8f",
+      "bytes": 122135040,
+      "group": "rvc",
+      "kind": "file",
+      "license": "MIT repository declaration; see component notices"
+    },
+    {
+      "id": "separator-model_bs_roformer_ep_368_sdr_12.9628.yaml",
+      "url": "https://huggingface.co/baicai1145/pymss/resolve/f02318ef92c43472777ed7aeeded3d2b29a68b58/vocal/vocal_extraction/model_bs_roformer_ep_368_sdr_12.9628.yaml",
+      "target": "engine/rvc/assets/pymss_weights/model_bs_roformer_ep_368_sdr_12.9628.yaml",
+      "sha256": "3dae086b481bc6adecccb6bdfd2386ffd78708e11c221876a146972cab5b2afe",
+      "bytes": 2279,
+      "group": "rvc",
+      "kind": "file",
+      "license": "Apache-2.0 as declared by baicai1145/pymss"
+    },
+    {
+      "id": "separator-model_bs_roformer_ep_368_sdr_12.9628.ckpt",
+      "url": "https://huggingface.co/baicai1145/pymss/resolve/f02318ef92c43472777ed7aeeded3d2b29a68b58/vocal/vocal_extraction/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
+      "target": "engine/rvc/assets/pymss_weights/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
+      "sha256": "f6c94864adfb73bbb0ca58ec14d58dd0b364549e9fb61433ae51916f3e2f8d0b",
+      "bytes": 639317465,
+      "group": "rvc",
+      "kind": "file",
+      "license": "Apache-2.0 as declared by baicai1145/pymss"
+    },
+    {
+      "id": "mms-aligner",
+      "url": "https://dl.fbaipublicfiles.com/mms/torchaudio/ctc_alignment_mling_uroman/model.pt",
+      "target": "engine/chorus-aligner/model.pt",
+      "sha256": "20ef12963ab4924bef49ac4fc7f58ad5da2ee43b2c11bc8c853c9b90ecdbc680",
+      "bytes": 1262047414,
+      "group": "alignment",
+      "kind": "file",
+      "license": "CC-BY-NC-4.0",
+      "requires_explicit_noncommercial_acknowledgement": true
+    }
+  ]
+}

@@ -1,14 +1,18 @@
 """SQLite-Speicher für Songs (Metadaten) und Einstellungen."""
 import json
+import os
 import sqlite3
 import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data"
+DATA = Path(os.environ.get("MUSIC_GENERATOR_DATA", str(ROOT / "data"))).resolve()
+if not DATA.is_relative_to(ROOT.resolve()):
+    raise ValueError("Daten müssen innerhalb des Music Generator Fork liegen.")
 SONGS_DIR = DATA / "songs"
 MODELS_DIR = ROOT / "engine" / "acestep.cpp" / "models"
 DB_PATH = DATA / "music.db"
+MODELS_DIR = ROOT / 'engine/acestep.cpp/models'
 
 def _engine_conf() -> dict:
     """Vom Installer geschrieben (data/engine.conf): MODE=single|split, LM_FILE=…"""
@@ -26,13 +30,13 @@ def _engine_conf() -> dict:
 _conf = _engine_conf()
 
 DEFAULT_SETTINGS = {
-    "server_url": "http://127.0.0.1:8085",   # Synthese (DiT + VAE, Metal)
+    "server_url": "http://127.0.0.1:8087",   # Eigener Fork-Server, startet pro Auftrag
     # Sprachmodell: eigener CPU-Server (Modus split) oder leer = gleicher Server wie Synthese (single)
-    "lm_url": "" if _conf.get("MODE") == "single" else "http://127.0.0.1:8086",
+    "lm_url": "",
     "lm_model": _conf.get("LM_FILE", ""),     # leer = erstes Sprachmodell im Modellordner
     "poll_interval": 1.5,
     "timeout_minutes": 30,
-    "dit": "standard",                 # Klangmodell: "standard" (2B) oder "xl" (4B, braucht die XL-Datei)
+    "dit": "standard",
     "songs_dir": "",                   # leer = data/songs im Programmordner, sonst absoluter Pfad
 }
 
@@ -47,13 +51,15 @@ def songs_dir() -> Path:
         custom = json.loads(r["value"]) if r else ""
     except Exception:  # noqa: BLE001 – vor der ersten Initialisierung oder bei kaputtem Wert
         custom = ""
-    d = Path(custom).expanduser() if custom else SONGS_DIR
+    d = (Path(custom).expanduser() if custom else SONGS_DIR).resolve()
+    if not d.is_relative_to(ROOT.resolve()):
+        raise ValueError("Song-Ordner muss innerhalb des Music Generator Fork liegen.")
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
 def connect() -> sqlite3.Connection:
-    DATA.mkdir(exist_ok=True)
+    DATA.mkdir(parents=True, exist_ok=True)
     SONGS_DIR.mkdir(exist_ok=True)
     con = sqlite3.connect(DB_PATH, check_same_thread=False)
     con.row_factory = sqlite3.Row
@@ -88,13 +94,25 @@ def init():
             CREATE INDEX IF NOT EXISTS idx_songs_group ON songs(group_id);
             CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS folders (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS voice_timings (id TEXT PRIMARY KEY, result_meta TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS voice_training (
+                id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL,
+                status TEXT NOT NULL, message TEXT, params TEXT NOT NULL, result_meta TEXT,
+                finished_at TEXT
+            );
             """
         )
         # Ordner der Bibliothek (nur in der App; die Dateien bleiben, wo sie sind). NULL = unsortiert
         if "folder_id" not in [r["name"] for r in _con.execute("PRAGMA table_info(songs)")]:
             _con.execute("ALTER TABLE songs ADD COLUMN folder_id TEXT")
+        training_columns={r['name'] for r in _con.execute('PRAGMA table_info(voice_training)')}
+        for column in ('removed_at','removed_status'):
+            if column not in training_columns:
+                _con.execute(f'ALTER TABLE voice_training ADD COLUMN {column} TEXT')
         # Nach einem Absturz hängengebliebene Jobs wieder einreihen
         _con.execute("UPDATE songs SET status='queued', message=NULL WHERE status='running'")
+        _con.execute("UPDATE voice_training SET status='error', message='Training durch Programmende unterbrochen; vorhandene Daten bleiben erhalten.' WHERE status='running'")
+        _con.execute("INSERT OR IGNORE INTO voice_timings SELECT id,result_meta FROM songs WHERE engine='rvc' AND status='done' AND result_meta IS NOT NULL")
         _con.commit()
 
 

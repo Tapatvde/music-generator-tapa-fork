@@ -30,7 +30,10 @@ const I18N = {
     // Einstellungen
     synth_srv: "Synthese-Server", synth_tip: "DiT + VAE, auf Metal",
     lm_srv: "Sprachmodell-Server", lm_tip: "Sprachmodell, auf CPU. Leer = gleicher Server wie Synthese.",
-    timeout: "Timeout (Min.)",
+    timeout: "Timeout (Min.)", mock: "Mock (Testton)",
+    dit:'Klangmodell',dit_standard:'Standard · SFT 2B',dit_xl:'XL · SFT 4B',
+    dit_hint:'XL benötigt mehr Grafikspeicher und Rechenzeit. Gilt für neue Songs und neue Arrangements; bestehende Aufnahmen bleiben erhalten.',
+    dit_xl_missing:'XL fehlt. Im Installer zusätzlich herunterladen.',
     songs_dir: "Song-Ordner", songs_dir_tip: "Leer = data/songs im Programmordner. Beim Ändern werden die vorhandenen Songs dorthin verschoben.",
     dit: "Klangmodell", dit_standard: "Standard", dit_xl: "XL", dit_tip: "Standard: SFT-Modell mit 2 Mrd. Parametern. XL: 4 Mrd. Parameter, klingt laut den Entwicklern besser, rechnet etwa doppelt so lange und braucht mehr Speicher (ab 16 GB empfohlen).", dit_xl_missing: "XL ist nicht installiert: Install erneut starten und XL wählen.",
     layout: "Anordnung", stacked: "Untereinander", side: "Nebeneinander", side_tip: "Generator links, Bibliothek rechts (ab ca. 1000 px Breite)",
@@ -58,6 +61,8 @@ const I18N = {
     mute: "Stumm", unmute: "Ton an", volume: "Lautstärke",
     // Updates
     upd_search: "Suche …", upd_current: (v) => `Aktuell (${v})`,
+    upd_fork_current: (v) => `Tapa Fork (${v}): alle aktuellen Updates des Originals integriert.`,
+    upd_fork_merge: " · Tapa Fork: Updates werden geprüft zusammengeführt, damit unsere Erweiterungen erhalten bleiben.",
     upd_new: (n, a, b) => `${n} ${n > 1 ? "neue Updates" : "neues Update"} (${a} → ${b})`,
     upd_dirty: " · eigene Dateiänderungen, automatisch nicht möglich", upd_install: " · danach bitte einmal Install starten",
     upd_loading: "Lade herunter …", upd_restart: "Installiert, App startet neu …",
@@ -92,7 +97,10 @@ const I18N = {
     auto_ph: "[Automatic]\nThe model writes the lyrics only when generating, no text appears here. You can type your own lyrics here.",
     synth_srv: "Synthesis server", synth_tip: "DiT + VAE, on Metal",
     lm_srv: "Language model server", lm_tip: "Language model, on CPU. Empty = same server as synthesis.",
-    timeout: "Timeout (min.)",
+    timeout: "Timeout (min.)", mock: "Mock (test tone)",
+    dit:'Sound model',dit_standard:'Standard · SFT 2B',dit_xl:'XL · SFT 4B',
+    dit_hint:'XL needs more GPU memory and processing time. Used for new songs and arrangements; existing recordings are preserved.',
+    dit_xl_missing:'XL is missing. Download it using the installer.',
     songs_dir: "Song folder", songs_dir_tip: "Empty = data/songs in the program folder. Changing it moves your existing songs there.",
     dit: "Sound model", dit_standard: "Standard", dit_xl: "XL", dit_tip: "Standard: SFT model with 2 billion parameters. XL: 4 billion parameters, sounds better according to the developers, takes about twice as long and needs more memory (16 GB or more recommended).", dit_xl_missing: "XL is not installed: run Install again and choose XL.",
     layout: "Layout", stacked: "Stacked", side: "Side by side", side_tip: "Generator on the left, library on the right (from about 1000 px width)",
@@ -116,6 +124,8 @@ const I18N = {
     stopped: "Stopped. Start again with “Music Generator ON”.",
     mute: "Mute", unmute: "Unmute", volume: "Volume",
     upd_search: "Searching …", upd_current: (v) => `Up to date (${v})`,
+    upd_fork_current: (v) => `Tapa Fork (${v}): all current upstream updates integrated.`,
+    upd_fork_merge: " · Tapa Fork: updates require a reviewed merge to preserve our extensions.",
     upd_new: (n, a, b) => `${n} new ${n > 1 ? "updates" : "update"} (${a} → ${b})`,
     upd_dirty: " · local file changes, automatic update not possible", upd_install: " · then run Install once",
     upd_loading: "Downloading …", upd_restart: "Installed, app is restarting …",
@@ -704,13 +714,16 @@ const I18N = {
   },
 };
 
+// Keep model identity visible in every language, including the Deep selector.
+for (const dictionary of Object.values(I18N)) Object.assign(dictionary,{dit_standard:'Standard · SFT 2B',dit_xl:'XL · SFT 4B'});
+
 const LANGS = { de: "Deutsch", en: "English", es: "Español", fr: "Français", it: "Italiano", pt: "Português", tr: "Türkçe", pl: "Polski",
   ru: "Русский", uk: "Українська", ja: "日本語", zh: "中文" };
 let LANG = "en";
 try {
   const saved = localStorage.getItem("ui_lang");
   const sys = (navigator.language || "en").toLowerCase().slice(0, 2);
-  LANG = saved in LANGS ? saved : sys in LANGS ? sys : "en";
+  LANG = Object.hasOwn(LANGS,saved) ? saved : Object.hasOwn(LANGS,sys) ? sys : "en";
 } catch {}
 
 const t = (k, ...a) => {
@@ -731,7 +744,7 @@ function applyI18n() {
 }
 
 function setLang(l) {
-  LANG = l;
+  LANG = Object.hasOwn(LANGS,l)?l:'en';
   try { localStorage.setItem("ui_lang", l); } catch {}
   applyI18n();
   document.dispatchEvent(new Event("langchange"));

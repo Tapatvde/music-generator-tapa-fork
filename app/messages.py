@@ -258,6 +258,17 @@ MSG = {
 }
 
 
+MSG.update({
+    'fork_update_guard':{
+        'de':'Tapa Fork: Updates des Originals werden geprüft zusammengeführt. Eine direkte Aktualisierung ist gesperrt, damit unsere Erweiterungen erhalten bleiben.',
+        'en':'Tapa Fork: upstream updates require a reviewed merge. Direct updates are disabled to preserve our extensions.'},
+    'fork_song_path':{
+        'de':'Der Song-Ordner muss innerhalb von dem Programmordner bleiben.',
+        'en':'The song folder must remain inside the program folder.'},
+    'fork_unknown_model':{'de':'Unbekanntes Klangmodell.','en':'Unknown sound model.'},
+})
+
+
 def tr(lang: str, key: str, **fmt) -> str:
     lang = (lang or "en").lower()[:2]
     text = MSG[key].get(lang) or MSG[key]["en"]

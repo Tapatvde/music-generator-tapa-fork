@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "package": "Music Generator – Tapa Fork",
+  "date": "2026-10-13",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 132,
+      "sha256": "45ee7532be9cc31bf9500a8839fb53bb1d3e9a184df51729efaa293b68fe58a7"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 117,
+      "sha256": "7d2bd5f63852ca400d881e376fe25d478523da7755c1a54c9c22da0fa874309b"
+    },
+    {
+      "path": "app/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "app/audio_mix.py",
+      "bytes": 791,
+      "sha256": "046d0084133a6c71051a100bd50a8580165dc6bd34dbea9ef7948fbcb234c161"
+    },
+    {
+      "path": "app/chorus.py",
+      "bytes": 4447,
+      "sha256": "f5753ba48c3773fcec0585e6086acc43875bdc5c49f6dc18803e70fe63695e04"
+    },
+    {
+      "path": "app/db.py",
+      "bytes": 6439,
+      "sha256": "93abe663d796f2e1320121e918873408de7f9f6fda9877c439409c8a7700367e"
+    },
+    {
+      "path": "app/deep.py",
+      "bytes": 9557,
+      "sha256": "c58ee54f70e89d74e754572b51e282ca3627848c552a1bc54f854b7b687df4d9"
+    },
+    {
+      "path": "app/engines.py",
+      "bytes": 9541,
+      "sha256": "5dc6096f26edad7487a917a8eae0b06855c48b9cb2cd3959edd7a9e549032ab2"
+    },
+    {
+      "path": "app/level_dsp.py",
+      "bytes": 4732,
+      "sha256": "46089706b5d0865efc9179f293a40b93e1fb071a98bc18b154cbbb832c3ffe8a"
+    },
+    {
+      "path": "app/levels.py",
+      "bytes": 3938,
+      "sha256": "f352d05bb8ed2d4330a5c6219ad33c4c08a3b2f7e4936a8523f5bf1823e2ca95"
+    },
+    {
+      "path": "app/main.py",
+      "bytes": 40440,
+      "sha256": "90b35ed80c569cfeb95691eb6016b7bb9679da081376206e83f8ec5cbf584b54"
+    },
+    {
+      "path": "app/managed_engine.py",
+      "bytes": 3721,
+      "sha256": "ca45c642bb273a3e69e5505f7abe48b858f3e96a602a0f628dc3f2be2440458e"
+    },
+    {
+      "path": "app/messages.py",
+      "bytes": 17542,
+      "sha256": "34c715aefa3b586816ec01b6123378a98d9cbf8cc6e4ffad6d533d6b8fca523a"
+    },
+    {
+      "path": "app/mix_settings.py",
+      "bytes": 442,
+      "sha256": "0e2826efe585618a0d6b0e4bdeb271bfbb3443292206c654dfdb5b787c763ac5"
+    },
+    {
+      "path": "app/register_policy.py",
+      "bytes": 2195,
+      "sha256": "3b134f1e61a2c7a868d9577446fa65b4b9a025bb32204ac93c43ab1b1c013047"
+    },
+    {
+      "path": "app/review.py",
+      "bytes": 1549,
+      "sha256": "cf291d3c4af4f325733a42afe723fe2b61106df689c86520190987811e0cfcc1"
+    },
+    {
+      "path": "app/updater.py",
+      "bytes": 1519,
+      "sha256": "0ace383e4036525f5ad5880290a6f7e8853d4630d25a527b63c0ea4d9613d6be"
+    },
+    {
+      "path": "app/voice_training.py",
+      "bytes": 7825,
+      "sha256": "30e6cd68fe1731c1cbff5117edb416cfecbc2c49babc69e4b4800211a8e64c93"
+    },
+    {
+      "path": "app/voices.py",
+      "bytes": 28698,
+      "sha256": "cd0c77a404256e1746f671987fe2d9ec22ec6adaf8ea04a5fdd6c85eac3542bc"
+    },
+    {
+      "path": "docs/AENDERUNGEN.md",
+      "bytes": 7221,
+      "sha256": "5dea13c8ced03cb16468c931e5a197a71ec155bbea6aff8fb8f2ee012903a343"
+    },
+    {
+      "path": "docs/BEDIENUNG.md",
+      "bytes": 7863,
+      "sha256": "4490b8f68bf1fac421befdf2e02f7f968f8457622713646db0f936dcd8e6530f"
+    },
+    {
+      "path": "docs/GITHUB.md",
+      "bytes": 5071,
+      "sha256": "3337dc787778c2e02e113ab787ec43a4c89b88e0730799c23ac574d29a3b5104"
+    },
+    {
+      "path": "docs/INSTALLATION.md",
+      "bytes": 7694,
+      "sha256": "ccf59908ef71f63282d1141187b86accc0f68eaeb4b92d218949f89829998c1f"
+    },
+    {
+      "path": "docs/LIZENZEN.md",
+      "bytes": 5607,
+      "sha256": "cefa25c21ad4072e6cd1c53225f5647a080cc7479c24a4ac0df1326031ce48fa"
+    },
+    {
+      "path": "docs/PRUEFSTATUS.md",
+      "bytes": 6648,
+      "sha256": "6fb22995cd2a3471d94c1920b4c74a98a6fb66f878859e0549a8eface0b138fd"
+    },
+    {
+      "path": "DOKUMENTATION.html",
+      "bytes": 55972,
+      "sha256": "5a61e61ebf068f4f615ada577bec17c0d3a144d80a2fd19daca3dc05a085db2f"
+    },
+    {
+      "path": "downloads-manifest.json",
+      "bytes": 19091,
+      "sha256": "964028238d94af6591299afd666e8099600673102cebae8831ffef1d49110390"
+    },
+    {
+      "path": "fork-info.json",
+      "bytes": 527,
+      "sha256": "a74fc8a41d93b42a0673debb1d7b1cb84eb2ba985dcdd3c57d96738d594915c3"
+    },
+    {
+      "path": "Install.bat",
+      "bytes": 278,
+      "sha256": "0a0022fda4105b8d808b73bcff00807ef3dba9917136113797b2593fe40ced65"
+    },
+    {
+      "path": "Install.ps1",
+      "bytes": 10914,
+      "sha256": "cea43dab411b67fc35457705299069f2bff2c828cb0985b76725560cb6dca10f"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1068,
+      "sha256": "72e358e49056d6e4b17449601b4dae0351fced7a71887a4ef58a8a4b82474e61"
+    },
+    {
+      "path": "Music Generator OFF.bat",
+      "bytes": 109,
+      "sha256": "21a3b95c09c26a1c999dd307fed20aa6bd5c5d1ad83bf8ae3d89f219be17d887"
+    },
+    {
+      "path": "Music Generator ON.bat",
+      "bytes": 110,
+      "sha256": "0f4b81b5cc78f708f4e6ccf531c32f10a4cdfd609b668faaefa3743183c5e006"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 274,
+      "sha256": "258b0375ffbd57ec68f36474c1d8a15eb78d7dbdee04634b58128c178dace926"
+    },
+    {
+      "path": "README.md",
+      "bytes": 6745,
+      "sha256": "3e36160b7794a78aa2c2fed959b3ff0cd412a98aef6e9c84a16400bb63902736"
+    },
+    {
+      "path": "requirements/app.in",
+      "bytes": 352,
+      "sha256": "51a1320775e28f1aa0f8946d4f3fe4c2b348b1ef42891160029a2b2081fae007"
+    },
+    {
+      "path": "requirements/app.lock",
+      "bytes": 16979,
+      "sha256": "489bec5de9ac5d01ad0d2c8da1caf406e7693730b6e1a8e1d992af5e24a87e61"
+    },
+    {
+      "path": "requirements/rvc.in",
+      "bytes": 2584,
+      "sha256": "276789dc9f43fa8307a856bb656390cf3729c1c11d6027c2b424bb7e632c525b"
+    },
+    {
+      "path": "requirements/rvc.lock",
+      "bytes": 270061,
+      "sha256": "dc00cb8839dfbb1d2b7ad71098a265c82f7d7ed81b756b467968b1a9ab960bc8"
+    },
+    {
+      "path": "requirements/torch.in",
+      "bytes": 198,
+      "sha256": "3fe2c07d9efdb9c42a471fca27c6c185380e682aacde718cb7dcb7d262f1632a"
+    },
+    {
+      "path": "scripts/apply-rvc-patch.py",
+      "bytes": 2776,
+      "sha256": "b115233116e52e57ae670b354eb319679c5f63798ff150ffd7a78cadde1a129c"
+    },
+    {
+      "path": "scripts/check-driver.py",
+      "bytes": 1118,
+      "sha256": "f70007eca08082c7ad4b9ff96d179fd8b759ea2dbffa132bd96e84dcc4112c7d"
+    },
+    {
+      "path": "scripts/check-rvc-source.py",
+      "bytes": 584,
+      "sha256": "c298c40e9721d0b3ae35a1bfc0a572525c1508349db80cc62d0cb3a59ab29b19"
+    },
+    {
+      "path": "scripts/extract-mute.py",
+      "bytes": 546,
+      "sha256": "27c3b56ecbf6e0c7d9053dc4afb3b669a0b38646c7b0ab9edec8d2ede1d14a3a"
+    },
+    {
+      "path": "scripts/extract-native-libraries.py",
+      "bytes": 1346,
+      "sha256": "fe0028809b89cefe3c5916af5de19f84408826b6df11213967b9387fe2afdfc1"
+    },
+    {
+      "path": "scripts/finish-install.py",
+      "bytes": 449,
+      "sha256": "26cbada6da396b6edd7ec77e176acf070bcf72b29fe9a36bf47fd777e20c6ac0"
+    },
+    {
+      "path": "scripts/fork-control.ps1",
+      "bytes": 3214,
+      "sha256": "c777658ac4eabdf825868c165d6d7fce3eeb18424b2ed159baf6f6f2e1fce8fd"
+    },
+    {
+      "path": "scripts/installer-common.ps1",
+      "bytes": 5049,
+      "sha256": "1a9c18d0b7e540fb265e0b1de67097ba312a6b6731c699696f2c9e4474766d8b"
+    },
+    {
+      "path": "scripts/instrumental-job.py",
+      "bytes": 3630,
+      "sha256": "1522ab5bb842a2f7fe36ed9601f14b3a447c8649bf7b56e13debf6db38958ace"
+    },
+    {
+      "path": "scripts/level-job.py",
+      "bytes": 4136,
+      "sha256": "485ea069f3170b634883ba11ada52915d2485346d5bf9a00fd512193872e0c55"
+    },
+    {
+      "path": "scripts/package-manifest.py",
+      "bytes": 2531,
+      "sha256": "067f561da05be142101900bcd052e65984f3221637055b73204e422b6e0fdeba"
+    },
+    {
+      "path": "scripts/rvc-customizations.patch",
+      "bytes": 35001,
+      "sha256": "dde1ffe33454a8347e31de91498817fd4bb765671285062afda0a8e2251c044b"
+    },
+    {
+      "path": "scripts/rvc-environment.ps1",
+      "bytes": 1252,
+      "sha256": "44f408eeed2c3b3afb9b815e4abedfc769009631ca29ba1e5f62efecc0c7f930"
+    },
+    {
+      "path": "scripts/section-pitch-plan.py",
+      "bytes": 3027,
+      "sha256": "78213f3c6a0bc5177a6554ff8331988aede4df5200df66c66e0c65b469eccf1f"
+    },
+    {
+      "path": "scripts/train-voice-profile.py",
+      "bytes": 7896,
+      "sha256": "2f35ef0996423530275d624b36141f86a7999985c0f5f08a0bfbf2c34d9efd2d"
+    },
+    {
+      "path": "scripts/verify-runtime.py",
+      "bytes": 1656,
+      "sha256": "3f53e85544f2de4ac1b9fdc7a545cdf14fa8e1bcbfcab4da28683b71f1a87f56"
+    },
+    {
+      "path": "scripts/voice-job.py",
+      "bytes": 28968,
+      "sha256": "074b4b1d35960629dd46f50c1b1560f00da54d2e350ecac2941b1953c6389a2d"
+    },
+    {
+      "path": "scripts/voice-separate.py",
+      "bytes": 982,
+      "sha256": "3b15ca9404aafd522dc53b1ab7ea7cc5b53fc28608899a50eff030349dc9ebe1"
+    },
+    {
+      "path": "scripts/voice_layers.py",
+      "bytes": 2249,
+      "sha256": "bf84ac119293c2a1d6e5ab772d6b3d3d17686c3773c985af343e3592066a252d"
+    },
+    {
+      "path": "scripts/voice_recovery.py",
+      "bytes": 5074,
+      "sha256": "016e21f9d60080c58a3585f5155fa6803139bd478dba9f4a69541ae260b79505"
+    },
+    {
+      "path": "static/alphatester.png",
+      "bytes": 13855,
+      "sha256": "297f47839bd09267722a07dcdbc4c81a58c6ba1b19f0a79a65a244b04a148148"
+    },
+    {
+      "path": "static/app.js",
+      "bytes": 41235,
+      "sha256": "a9d924bf60752f10a8c53d5a17feccf2ec419e9acae1008d69be06ea7e3a5def"
+    },
+    {
+      "path": "static/deep.js",
+      "bytes": 16912,
+      "sha256": "4ac06df16caebab5f2066b6bbb4962608f330f3eb689ea5c73bd61ba8b6d6054"
+    },
+    {
+      "path": "static/favicon.svg",
+      "bytes": 681,
+      "sha256": "f1ac28a8a2e1e947e7ece8a1320536d8e3c80ce83b7e7acee1c1ea48722520b7"
+    },
+    {
+      "path": "static/i18n.js",
+      "bytes": 78458,
+      "sha256": "6ab7cb9d74926f90ca28733c50b7aea821170090151cb9ae196e24d2430c5e8a"
+    },
+    {
+      "path": "static/index.html",
+      "bytes": 32815,
+      "sha256": "ac45abe9b82b4f0d36fb74c7fe5d02310b089265f44f12540310d141f07512db"
+    },
+    {
+      "path": "static/mix-levels.js",
+      "bytes": 3470,
+      "sha256": "fbd90d44ad279fcce0478823368005061350d896cc0ddbfa81f02f08bff8b949"
+    },
+    {
+      "path": "static/profile-library.js",
+      "bytes": 10149,
+      "sha256": "c010748ad89a1a3f0c942aa16e88111068c89242bdf283152f623bb08bc2a5d5"
+    },
+    {
+      "path": "static/style.css",
+      "bytes": 26540,
+      "sha256": "752ce644b5df80d879377359abca053f5dfc27451cfafb83e85b6a95dbc09a50"
+    },
+    {
+      "path": "static/vendor/wavesurfer-LICENSE.txt",
+      "bytes": 1531,
+      "sha256": "0fc992dc27cc34dde78bfeb024b4cadff6320f0dcbee2f1228efaeb533ca1364"
+    },
+    {
+      "path": "static/vendor/wavesurfer.min.js",
+      "bytes": 41963,
+      "sha256": "297b4883c3f2d8dbd14976a4281a1a150c6a1adf8bffb165ed44a7ccd6dc5c23"
+    },
+    {
+      "path": "static/voices.js",
+      "bytes": 40944,
+      "sha256": "561d72383c2d4142923213cb5e55bcfc3bb9daadaf7f17e494fa1aec6320b646"
+    },
+    {
+      "path": "tests/test_api.py",
+      "bytes": 4219,
+      "sha256": "59983ff91bb3f37cb991924e32d1c20d335c752c16d3c098cc3dcb6055cb26f7"
+    }
+  ],
+  "total_bytes": 993247,
+  "private_data_included": false,
+  "runtime_binaries_included": false
+}

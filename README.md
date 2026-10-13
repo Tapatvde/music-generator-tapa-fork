@@ -1,118 +1,52 @@
-# Music Generator
+# Music Generator – Tapa Fork
 
-Eigene Songs lokal erzeugen – ohne Limits, ohne Abo, ohne Cloud.
-Web-Oberfläche für [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) über
-[acestep.cpp](https://github.com/ServeurpersoCom/acestep.cpp).
+Ein transparenter Windows-Fork des [Music Generators von ALPHATESTER / rabbitfiremediacreation](https://github.com/rabbitfiremediacreation/music-generator). Er ergänzt lokale Songgenerierung um eigene Stimmprofile, RVC-Stimmumwandlung, Training, Instrumentalversionen, Originalbearbeitung und erweiterte Gesangssteuerung.
 
-- **Mac** (Apple Silicon, Metal): diese Seite. Ausführliche Anleitung mit Bildern: **[Installationsanleitung.pdf](Installationsanleitung.pdf)**
-- **Windows** (NVIDIA, CUDA/Vulkan): **[README-WINDOWS.md](README-WINDOWS.md)**
-- Anleitung in anderen Sprachen: **[Installation-Guide-EN.pdf](Installation-Guide-EN.pdf)** (English), **[Installation-Guide-ZH.pdf](Installation-Guide-ZH.pdf)** (中文)
-- **Linux** (NVIDIA/AMD, ohne Installer): Abschnitt [Linux](#linux) unten
+**Status: öffentlicher Quellcode- und Installationskandidat, keine endgültig freigegebene stabile Version.** Stand 13.10.2026, Originalbasis `3681b03fe4a91886413f87577ac94e4c2b583416`. Der Fork ist eigenständig und wird nicht als offizielle Ausgabe des Originalentwicklers dargestellt.
 
-## Installation
+Quellrepository: [Tapatvde/music-generator-tapa-fork](https://github.com/Tapatvde/music-generator-tapa-fork).
 
-Voraussetzungen: Mac mit Apple Silicon (M1 oder neuer), mindestens 8 GB Arbeitsspeicher, 7–11 GB frei.
+## Installation in wenigen Schritten
 
-```bash
-git clone https://github.com/rabbitfiremediacreation/music-generator.git ~/MusicGenerator
-open ~/MusicGenerator/Install.command
-```
+1. Den vollständigen Ordner aus dem ZIP an einen beschreibbaren Ort entpacken, beispielsweise `C:\MusicGeneratorTapa`. Nicht im ZIP starten und keine vorhandene Musikinstallation überkopieren.
+2. **Install.bat doppelklicken.** Es gibt kein `Setup.exe` und kein eigenes binäres Installationsprogramm. Die sichtbaren PowerShell-/Python-Skripte laden Laufzeit, Modelle und Zusatzkomponenten aus den dokumentierten Quellen nach.
+3. Sprachmodell, optionales XL-Klangmodell und die Stimmfunktionen auswählen. Für eigene Stimmen ist die RVC-Option erforderlich. Der automatische Text-/Refrainabgleich ist ein separater, nichtkommerzieller Zusatz.
+4. Nach der Installation mit **Music Generator ON.bat** starten. Die Oberfläche läuft lokal unter **http://127.0.0.1:8766/**. Mit **Music Generator OFF.bat** beenden.
 
-Der Installer
+Voraussetzungen: Windows 10/11 x64, NVIDIA-GPU mit aktuellem CUDA-13-kompatiblem Treiber; für RVC in diesem Kandidaten eine kompatible GPU vor der RTX-50-Generation. Die technische Erprobung bezieht sich auf eine RTX 4080 mit 16 GB VRAM. Mindestens 16 GB RAM empfohlen. Etwa 20 GB freier Platz für Musik allein, 35 GB für Musik und Stimmen, mit XL zusätzlich mindestens 6 GB Reserve. Eigene Aufnahmen, Songs und Trainingsstände benötigen weiteren Platz. Es wird kein Systemtreiber installiert und keine Administratorfreigabe benötigt.
 
-1. prüft Chip, Arbeitsspeicher und freien Platz,
-2. schlägt das passende Sprachmodell vor (0.6B unter 12 GB, 1.7B bis 24 GB, 4B darüber),
-3. installiert was fehlt: Apple-Entwicklerwerkzeuge, `uv`, `cmake` (ohne Homebrew, ohne Passwort),
-4. baut acestep.cpp in der getesteten Version (`b7ba6d9`),
-5. lädt nur die benötigten Modelle (fortsetzbar),
-6. testet, ob das Sprachmodell auf dem Grafikchip richtig rechnet (sonst CPU, siehe unten),
-7. richtet die Symbole für **Music Generator ON / OFF** ein und startet die App.
+Details: [Installation und Wiederaufnahme](docs/INSTALLATION.md), [Bedienung](docs/BEDIENUNG.md), [Änderungen gegenüber dem Original](docs/AENDERUNGEN.md), [Lizenzen](docs/LIZENZEN.md), [GitHub-Veröffentlichung](docs/GITHUB.md), [Prüfstatus](docs/PRUEFSTATUS.md).
 
-Er kann jederzeit erneut laufen; Erledigtes wird übersprungen.
-Optionen: `--yes` (keine Rückfragen), `--lm 0.6B|1.7B|4B`, `--xl`, `--no-start`.
+Die komplette Anleitung lässt sich auch ohne Zusatzprogramm per Doppelklick auf [DOKUMENTATION.html](DOKUMENTATION.html) im Browser lesen. Die Markdown-Dateien bleiben als bearbeitbare Textquellen enthalten.
 
-**XL-Klangmodell (optional):** Der Installer fragt, ob zusätzlich das größere Klangmodell ACE-Step 1.5 XL (4 statt 2 Milliarden Parameter, 5,3 GB) geladen werden soll. Laut den Entwicklern klingt es besser, es rechnet etwa doppelt so lange und braucht mehr Speicher (ab 16 GB Arbeitsspeicher bzw. 12 GB Grafikspeicher). Standard bleibt das kleinere Modell; XL wählst du danach unter Zahnrad › Klangmodell. Gemessen auf einem M4 mit 16 GB: ein 30-Sekunden-Song brauchte mit Standard 49 s, mit XL 99 s. Noch wenig getestet, Rückmeldungen willkommen.
+## Was der Fork ergänzt
 
-## Benutzen
+- Eigene trockene Soloaufnahmen importieren, lokal ein RVC-Stimmprofil trainieren und anschließend im Dropdown verwenden. Keine fremden oder persönlichen Stimmen werden mitgeliefert.
+- Bereits fertige oder importierte Songs mit einem anderen Stimmprofil als zusätzliche Fassung bearbeiten; Originale bleiben erhalten.
+- Gesang entfernen und eine Instrumentalfassung als feste Grundlage für weitere Stimmversuche verwenden.
+- Stimmumfang, stabile Oktavlage, eine Oktave höher und tief/mittel/hoch für markierte Strophen und Refrains steuern. Unsichere Zuordnungen und unpassende Wünsche werden sichtbar behandelt.
+- Eine zweite Stimme in Refrains mit festem Intervall und eigenem Pegel zuschalten; automatische Zuordnung aus `[chorus]` benötigt den optionalen Abgleich, manuelle Zeiten bleiben möglich.
+- Vorschau, zeitgleicher Originalvergleich, Prüfstellen, getrennte Gesangs-/Harmonieexporte und Bearbeitung einzelner Passagen.
+- Zuschaltbare unabhängige Pegelstabilisierung für Gesang und Begleitung, Pegelregler sowie erneute lokale Umwandlung bei schweren Gesangsaussetzern im Qualitätsmodus.
+- **Simple Mode / Deep Mode:** Originalaufnahme, Lyrics, Akkorde und Nähe zur Vorlage gemeinsam für eine neue Fassung verwenden. Standard oder XL direkt pro Auftrag wählen. Eine fertige Vorschau kann eine Vollfassung mit ihren gespeicherten Einstellungen beauftragen.
+- Gemeinsame Warteschlange für Musik, Stimmumwandlung und Training, Abbruch und lokale Wiederaufnahme, geschätzte Verarbeitungszeit, geschützter Updatepfad.
 
-- **Music Generator ON** startet Modellserver und App und öffnet http://localhost:8765
-- **Music Generator OFF** beendet alles und schließt die Browser-Tabs
-- Oberfläche in zwölf Sprachen (Auswahl oben rechts): Deutsch, Englisch, Spanisch, Französisch, Italienisch, Portugiesisch, Türkisch, Polnisch, Russisch, Ukrainisch, Japanisch, Chinesisch. Korrekturen an `static/i18n.js` sind willkommen.
+## Transparenz und Datenschutz
 
-## Aktualisieren
+`Install.bat` ruft `Install.ps1` auf. Sämtliche Downloadadressen, Größen und SHA-256-Prüfsummen stehen in **downloads-manifest.json**. Exakte Python-Paketversionen und erlaubte Hashes stehen unter **requirements/**. Die eigenen RVC-Anpassungen sind als **scripts/rvc-customizations.patch** sichtbar; der Installer prüft die unveränderte Quellrevision vor der Anwendung.
 
-In der App: Zahnrad › **Nach Updates suchen** › **Jetzt aktualisieren** (holt die neue Fassung von GitHub und startet die App neu; ändert sich acestep.cpp, weist sie auf den Installer hin). Oder von Hand:
+Das Quellpaket enthält keine `engine/`, `data/`, `.venv/` oder `.git/`-Ordner, keine Nutzeraufnahmen, Songs, trainierten Stimmgewichte, Indizes, Datenbanken, Zugangsdaten oder privaten Entwicklungsberichte. Laufzeitdaten entstehen erst lokal bei der Installation beziehungsweise Benutzung. **PACKAGE-CONTENTS.json** und **SHA256SUMS.txt** ermöglichen die Kontrolle der gelieferten Dateien. Prüfsummen ersetzen keine digitale Herausgebersignatur.
 
-```bash
-cd ~/MusicGenerator && git pull
-open Install.command
-```
+Musik- und Stimmverarbeitung läuft lokal. Die Erstinstallation lädt Komponenten aus dem Internet; die Updateprüfung fragt GitHub ab. Der eigene Fork öffnet seine Dienste nur auf der lokalen Loopback-Adresse. Nur eigene Stimmen oder Stimmen mit ausdrücklicher Erlaubnis verwenden.
 
-Songs und Einstellungen in `data/` bleiben erhalten.
+## Grenzen
 
-## Linux
+RVC ersetzt die Stimmfarbe eines vorhandenen Gesangs, komponiert keine neue Melodie und korrigiert keinen falsch gesungenen Text. Tonlagen, Refrainzuordnung, Harmonien und Pegelkorrektur sind Hilfen mit hörbaren Grenzen. Mehr Trainingsrunden und mehr Rechenzeit garantieren kein besseres Ergebnis. Eine Deep-Neufassung kann vom Original abweichen; sie ist kein verlustfreier Qualitätsfilter. MIDI-Ausgabe, MIDI-Import und ein synchroner Logic-Mehrspurimport sind nicht enthalten.
 
-Die App selbst (Python, Oberfläche, Datenbank) ist plattformneutral und acestep.cpp baut auch unter Linux.
-Einen Installer gibt es dafür nicht, der Weg von Hand ist aber kurz. **Ungetestet**, Rückmeldungen willkommen.
+Die Originaloberfläche unterstützt zwölf Sprachen; die Fork-Erweiterungen sind deutsch/englisch und verwenden bei anderen Sprachen Englisch. Mac/Linux-Unterstützung des Originalprojekts ist keine Zusage für diesen Windows-/RVC-Fork.
 
-Voraussetzungen: git, cmake, ein C++-Compiler, [uv](https://docs.astral.sh/uv/), für NVIDIA das CUDA-Toolkit (AMD/Intel: Vulkan-SDK).
+## Lizenz und Herkunft
 
-```bash
-git clone https://github.com/rabbitfiremediacreation/music-generator.git ~/MusicGenerator
-cd ~/MusicGenerator && uv sync
-# Modellserver in der getesteten Version bauen (Hash steht in scripts/common.sh)
-git clone --recurse-submodules https://github.com/ServeurpersoCom/acestep.cpp engine/acestep.cpp
-(cd engine/acestep.cpp && git checkout b7ba6d9 && ./buildcuda.sh)     # oder ./buildvulkan.sh, ./buildcpu.sh
-# Modelle laden: die drei festen plus ein Sprachmodell (Adresse und SHA-256 in scripts/common.sh)
-(cd engine/acestep.cpp && ./models.sh --lm 1.7B --sft)
-# Betriebsart: ein Server für alles
-mkdir -p data && printf 'MODE=single\nLM_FILE=acestep-5Hz-lm-1.7B-Q8_0.gguf\n' > data/engine.conf
-```
+Der Originalcode steht unter MIT und sein Copyright-Hinweis bleibt in **LICENSE** erhalten. Die Fork-Anpassungen werden ebenfalls unter MIT angeboten. Modelle, FFmpeg, CUDA-Bibliotheken und weitere Laufzeiten haben eigene Bedingungen; insbesondere ist **MMS_FA CC-BY-NC-4.0** und wird nur nach ausdrücklicher Wahl nachgeladen. Keine pauschale MIT- oder kommerzielle Freigabe des gesamten Modellpakets. Siehe [Lizenzübersicht](docs/LIZENZEN.md).
 
-Starten (zwei Terminals oder mit `&` im Hintergrund), dann http://localhost:8765 öffnen:
-
-```bash
-engine/acestep.cpp/build/ace-server --host 127.0.0.1 --port 8085 --models engine/acestep.cpp/models --max-batch 1
-uv run uvicorn app.main:app --host 127.0.0.1 --port 8765
-```
-
-Hinweise: `models.sh` lädt mehr Varianten als nötig, gebraucht werden `vae-BF16`, `Qwen3-Embedding-0.6B-Q8_0`, `acestep-v15-sft-Q8_0`
-und das gewählte `acestep-5Hz-lm-*-Q8_0`. Die Knöpfe „Server stoppen" und der Neustart nach einem Update rufen die Mac-Skripte auf
-und funktionieren unter Linux nicht; Server im Terminal beenden und neu starten. Songs liegen wie überall in `data/songs`.
-
-## Aufbau
-
-| Pfad | Inhalt |
-|---|---|
-| `Install.command` | Installer (Mac) |
-| `Music Generator ON/OFF.command` | Start und Stopp (Mac) |
-| `Install.ps1`, `Music Generator ON/OFF.ps1` + `.bat` | Installer, Start und Stopp (Windows) |
-| `scripts/common.sh` | gemeinsame Pfade, Ports, acestep.cpp-Version, Modell-Prüfsummen (Mac und Windows) |
-| `scripts/common.ps1` | Windows-Gegenstück, liest die Werte aus `common.sh` |
-| `scripts/metal_selftest.py` | Grafikchip-Test des Installers |
-| `app/` | FastAPI-Backend: Queue, Bibliothek, Anbindung an ace-server |
-| `static/` | Oberfläche |
-| `docs/anleitung/` | Quelle der Installationsanleitung. `capture.py` fotografiert die laufende App (`uv run --with websockets python docs/anleitung/capture.py`), `build_pdf.py` baut daraus das PDF (`uv run --with reportlab python docs/anleitung/build_pdf.py Installationsanleitung.pdf`; andere Sprachen: `capture.py … en` und `build_pdf.py Installation-Guide-EN.pdf en`, Texte in `texts.py`) |
-| `engine/` | acestep.cpp und Modelle (vom Installer, nicht im Repo) |
-| `data/` | Songs, Datenbank, Logs, `engine.conf` (nicht im Repo) |
-
-## Grafikchip und die zwei Modi
-
-Auf dem Apple M4 liefert das Sprachmodell unter Metal in acestep.cpp `b7ba6d9` fehlerhafte Ergebnisse
-(0 Audio-Codes). Der Installer erkennt das mit einem kurzen Probelauf und schreibt nach `data/engine.conf`:
-
-- `MODE=split` – Sprachmodell auf der CPU (Port 8086), Klangerzeugung auf Metal (Port 8085)
-- `MODE=single` – alles auf einem Metal-Server (Port 8085)
-
-Nach einem Update von acestep.cpp (`ACESTEP_REV` in `scripts/common.sh`) testet der Installer neu.
-
-## Lizenz der Modelle
-
-ACE-Step 1.5 steht unter Apache 2.0. Die Modelle werden beim Installieren von
-[Hugging Face](https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF) geladen und sind nicht Teil dieses Repositorys.
-Vor kommerzieller Nutzung die Lizenz- und Trainingsdaten-Lage selbst prüfen.
-
-## Lizenz
-
-Der Code in diesem Repository steht unter der [MIT-Lizenz](LICENSE).
-`static/vendor/wavesurfer.min.js` stammt von [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js) (BSD-3-Clause).
+Vielen Dank an ALPHATESTER / rabbitfiremediacreation, ACE-Step, Serveurperso/acestep.cpp, RVC und die Entwickler der verwendeten Werkzeuge.
