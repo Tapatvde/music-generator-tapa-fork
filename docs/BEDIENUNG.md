@@ -6,6 +6,12 @@ Titel optional, Prompt und Stil beschreiben die gewünschte Musik. Länge, BPM, 
 
 Optional ein fertig trainiertes Stimmprofil für die zusätzliche Stimmversion auswählen. Die musikalische Originalfassung wird zuerst erzeugt und erhalten. Die automatische Folgeumwandlung benötigt Gesang, vollständige Fassung und bei automatisch zugeordneten Harmonien passend markierte Lyrics.
 
+## Mikrofonideen und Sprachmodellgerät
+
+Mit dem Mikrofonknopf in der Kopfzeile 5 bis 30 Sekunden summen, pfeifen oder singen. Gedrückthalten nimmt auf, Loslassen beendet die Aufnahme; für assistive Bedienung ist Umschalten vorgesehen, Alt+R ebenfalls. Der Browser kann dafür eine Mikrofonfreigabe verlangen. Die lokale Auswertung ersetzt Prompt, BPM, Tonart und Takt, erhält aber den vorhandenen Titel, Songtext, Gesangssprache, Instrumentalwahl, Stil und Länge. Sie überträgt die konkrete Melodie nicht als Audiovorlage; dafür Deep Mode verwenden. Die Idee wird nicht in der Bibliothek gespeichert.
+
+Unter Zahnrad › Sprachmodell rechnet auf zwischen Automatisch und Nur CPU wählen. Dies ist unabhängig von Standard/XL. Die Klangerzeugung bleibt auf der GPU. Die neue Auswahl gilt ab dem nächsten Auftrag; laufende Aufträge behalten ihre Wahl. Im Normalfall Automatisch verwenden. Nur CPU kann bei Problemen mit der Sprachmodellberechnung helfen, ist aber kein allgemeiner Klangqualitätsregler.
+
 ## Eigene Stimmprofile
 
 1. **Stimmprofile verwalten / Manage voice profiles** öffnen.

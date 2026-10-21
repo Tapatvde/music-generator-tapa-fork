@@ -1,4 +1,4 @@
-# Package checksums cover exact bytes. Keep Git checkout bytes unchanged.
+# Package checksums cover exact bytes, including checkout and archive line endings.
 * -text
 *.patch whitespace=-blank-at-eol
 *.pdf binary

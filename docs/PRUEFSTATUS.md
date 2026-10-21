@@ -1,50 +1,46 @@
-# Prüfstatus des Installationskandidaten
+# Prüfstatus – 2026.10.21-preview.1
 
-Stand 13.10.2026. Die Ergebnisse stammen aus dieser Paketvorbereitung. Technische Laufzeitprüfungen und persönliche Hörabnahme sind getrennte Nachweise.
+Stand 21.10.2026. Diese Ausgabe ist eine **Preview / ein Installationskandidat**. Die folgende Tabelle beschreibt die neue Paketprüfung; frühere Ergebnisse stehen getrennt unter [Prüfstatus vom 13.10.2026](PRUEFSTATUS-20261013.md).
 
-## Aktuell durchgeführte Prüfungen
-
-| Prüfung | Ergebnis |
+| Neu geprüfter Bereich | Ergebnis |
 |---|---|
-| Bereinigter Quellordner | Keine Nutzeraudios, Modelle, Datenbank, Zugangsdaten, persönlichen Pfade oder private Git-Historie enthalten; Dateiliste und SHA-256-Prüfsummen separat mitgeliefert |
-| Quellsyntax | 34 Python-Dateien, 6 JavaScript-Dateien und 4 PowerShell-Dateien ohne Syntaxfehler |
-| Eintrittspunkt | Install.bat ruft lesbare Install.ps1 auf; keine Setup.exe; Windows PowerShell 5.1 verwendet |
-| RVC-Grundlage | Festes Quellarchiv geprüft; sichtbarer Patch auf 11 Dateien angewendet; Markierung mit Quellrevision und Datei-Hashes kontrolliert |
-| Neue Installation | Neue Python-3.12.15-Laufzeit, neue App- und RVC-Umgebungen; 18 App- und 127 RVC-Pakete aus Hash-Locks eingerichtet; Standard, XL, LM 4B und optional MMS installiert |
-| Wiederaufnahme | Erledigte Dateien wiederverwendet; vorhandene Einstellungen erhalten; unterbrochenes RVC-Archiv erfolgreich neu geladen, weil der Anbieter keine Byte-Range unterstützt |
-| Download-/Schutzprobe | RVC-Archiv über den tatsächlichen curl-Downloadweg geladen und gehasht; falscher Cache und Pfad außerhalb des Programmordners ausdrücklich abgewiesen |
-| Musik-only-Option | Separater neuer Ordner ohne RVC-Python/Stimmgrundmodelle; Audioimport/Deep-Vollauftrag und alle zehn API-Fälle erfolgreich |
-| Offline-Cache-Probe | Vollständige zweite Einrichtung aus verifizierten allgemeinen Downloads und Paketcache ohne neue Netzwerkdownloads erfolgreich |
-| GPU | RTX 4080 / 16 GB; CUDA-Treiber-API, PyTorch 2.7.1+cu118, endliche CUDA-Matrixergebnisse und lokale Trainingsgrundmodelle geprüft |
-| Musikgeneration | Standard und XL jeweils erfolgreich über den neu geladenen nativen Windows-Musikserver gerendert; 48-kHz-Ausgaben mit endlichem, nichtleerem Signal |
-| Trainingsablauf | 48 Sekunden synthetisches, nichtpersönliches Tonmaterial importiert; 50 Trainingsrunden, Modell-/Indexexport, anschließende Umwandlungsprobe und Anzeige im Dropdown erfolgreich |
-| Stimmauftrag | Neu generierter Gesang mit dem neuen Testprofil umgewandelt; manuelle höhere Oktavharmonie (+12) und beide Pegelstabilisierungen aktiv; gültige Ausgaben und Exporte |
-| Instrumental | Instrumentalversion der exakt gewählten Stimmfassung erfolgreich exportiert; Schutz der Quelldatei bestätigt |
-| API-Prüfungen | 10 bestandene Fälle: Originalimport, neutrale Vorgaben, Deep-Vollaufträge, Vorschaugrenze, Profilentfernung/Wiederherstellung, Validierung, Fehlermeldungen und geschützte Updateprüfung |
-| Oberfläche | Simple/Deep Mode, sichtbare Standard-/XL-Auswahl und neues synthetisches Profil in der Profilverwaltung geprüft |
-| Lizenz/Herkunft | Original-LICENSE unverändert; Code, Modelle, Laufzeiten und optionale NC-Komponente getrennt dokumentiert |
-| GitHub | Öffentlicher Fork korrekt angelegt; Konto-/Repositoryfreigabe und erfolgreicher Schreibtest geprüft; Quellpaket als Preview, keine nummerierte stabile Freigabe |
+| Transparenter Einstieg | Install.bat → Install.ps1, Windows PowerShell 5.1; kein EXE-Setup |
+| Getrennte Neuinstallation | Neue CPython-3.12.15-Laufzeit; 18 App-Pakete und 127 RVC-Pakete aus den Versions-/Hash-Locks eingerichtet. Standard, XL, LM 4B und optional MMS aus verifizierten allgemeinen Downloads eingerichtet; keine privaten Aufnahmen oder Profile kopiert |
+| RVC-Laufzeit | Feste Quellrevision und Patch auf elf Dateien geprüft; PyTorch 2.7.1+cu118, CUDA-Matrix und Trainingsgrundmodelle in der neuen Installation geprüft |
+| Laufender Server | Neue Installation ohne persönliche Profile/Songs gestartet; CPU-Auswahl des Installers gelesen, per API auf Automatisch zurückgestellt, XL erkannt und lesender Original-Updatepfad geprüft; Testserver anschließend beendet |
+| Paket-API | 10 Prüfungen für leere Profilbibliothek, neutrale Vorgaben, Import, Entfernen/Wiederherstellen, Deep-Vollfassung, Vorschaugrenzen, Update-Sperre und Fehlermeldungen bestanden |
+| Verbindungs-/Einstellungsregression | Neun zusätzliche Prüfungen für Zahlen, Modellwahl, Fork-Stopp und Abrufwiederholung bestanden |
+| CPU-Konfiguration und Prozesse | 14 Prüfungen für CPU/Auto, Konfigurationsschutz, Validierung, eigenen Serverstart, CLI-Gerätewahl und Aufräumen nach Erfolg/Fehler/Abbruch bestanden |
+| Oberfläche als JavaScript | Sechs Prüfgruppen für Modellwahl, Vorschau→Vollfassung, Mikrofonidee, Tastenkürzel, Sprachen und Player/Hörmarken bestanden. Mikrofon nur simuliert, keine echte Aufnahme |
+| Windows-Installer | Zwei native PowerShell-Prüfgruppen: echte CPU-/Auto-Konfigurationsdateien und Optionsplan; native Laufzeit mit Wiederverwendung, Sicherung/Rücksetzen, Port-/Hash-/ZIP-/Pfadschutz. Synthetische Archive und Dateien, keine Nutzerdaten |
+| Offline-Wiederaufnahme | Vollständiger Installer erneut mit -NoNetwork, -Cpu, XL und optionalem MMS ausgeführt; verifizierte Laufzeit/Modelle und beide Paketumgebungen wiederverwendet, CPU-Wahl gespeichert |
+| Neuer nativer Musikserver | Fester Original-Build 6013134 aus der ZIP mit erwartetem SHA-256; in der getrennten Installation tatsächlich ausgeführt |
+| Standard-Render | LM automatisch, Synthese CUDA0; gültige 48-kHz-Stereo-WAV, 7,20 Sekunden Audio, 10,39 Sekunden Laufzeit |
+| XL-Render | LM tatsächlich CPU, Synthese CUDA0; gültige 48-kHz-Stereo-WAV, 7,04 Sekunden Audio, 22,45 Sekunden Laufzeit |
 
-Allgemeine vorab geladene Archive und Gewichte dürfen nach erneuter Hashprüfung als Cache wiederverwendet werden. Keine private Python-Umgebung, Aufnahme oder persönliche Stimme wurde in die neue Installation kopiert. Die neuen Python-Pakete wurden aus den dokumentierten Paketquellen eingerichtet.
+Die Renderproben sind kurze technische Instrumentalproben mit 50 Schritten. Die Requestlänge war jeweils zehn Sekunden; das Modell lieferte die oben gemessenen kürzeren Ausgaben. Das belegt den technischen Ablauf, keine musikalische Qualitätsverbesserung oder Identität einer Sängerperson.
 
-## Während der Vorbereitung behobene Setupfehler
+## Während dieser Vorbereitung behoben
 
-Der erste Patch-Installer konnte einen fehlenden abschließenden Zeilenumbruch nicht behandeln. Die strikte Patch-Anwendung unterstützt diesen Fall jetzt. Die erste Laufzeitprüfung versuchte außerdem App-Module in der RVC-Umgebung zu importieren, obwohl beide Umgebungen bewusst verschiedene Pydantic-Versionen verwenden. Die Prüfung verwendet jetzt die zur jeweiligen Umgebung gehörenden Module und kontrolliert die lokalen Trainingsdateien direkt. Beide Fehler wurden vor Abschluss des Kandidaten behoben. Beim Test über die BAT-Datei war außerdem die automatische Bereitstellung der PowerShell-Funktion Get-FileHash in einer Aufrufumgebung nicht verfügbar. Der Installer berechnet SHA-256 deshalb direkt über .NET und ruft die Windows-PowerShell ausdrücklich über ihren Systempfad auf.
+Windows PowerShell 5.1 übergab einen untypisierten Nullwert beim atomaren Dateiaustausch als ungültigen Backup-Pfad. Der Installer verwendet nun ausdrücklich NullString.Value; der reale Dateischreibtest besteht.
 
-Ein reines synthetisches Tonbeispiel wurde vom Trennmodell nicht als nutzbarer Gesang erkannt. Die App brach den Auftrag sichtbar ab. Die anschließende Stimm-/Instrumentalprobe verwendete deshalb neu generierten Gesang. Ein einmaliger Verbindungsabbruch des externen Test-Abfrageprogramms während des Trainings betraf nicht den Trainingslauf: Dieser schloss erfolgreich ab und wurde anschließend erneut über die API geprüft.
+Die neue native Engine ignorierte die bisherige GGML_BACKEND-Umgebungswahl für das Sprachmodell. Die echte Probe erkannte, dass es trotz CPU-Auswahl auf CUDA lief. Der Veröffentlichungsstand setzt zusätzlich den dokumentierten Startparameter `--device CPU` ausschließlich am CPU-Kindprozess. Die erneute Probe weist LM=CPU und Synthese=CUDA0 nach; die Tests prüfen auch den konkreten Parameter.
 
-## Bereits vorhandene technische Basis
+## Historische Entwicklungsregression
 
-Die private Arbeitsfassung bestand zuvor 115 Python-Prüfungen für Queue, RVC, Profile/Training, Instrumental, Deep Mode, XL, Pegel und Gesangsaussetzer sowie weitere Browser-/Sprachprüfungen. Diese historischen Ergebnisse sind lediglich die Ausgangsbasis; sie werden nicht als neu durchgeführte Paketprüfungen gezählt.
+Vor dem Paketexport bestand die lokale Entwicklungsfassung 138 Python-Prüfungen und sechs JavaScript-Prüfgruppen. Stimmen, Training, Instrumental, Deep, XL, Tonlagen, Harmonien, Pegel und Reparaturen waren enthalten. Diese 138 werden **nicht** als zusätzlich neu ausgeführte Tests des bereinigten Pakets gezählt; hier wurden 33 Python-Tests, sechs JavaScript- und zwei PowerShell-Prüfgruppen ausgeführt.
 
-## Grenzen und noch offene Abnahme
+## Grenzen
 
-- Die Installation wurde in getrennten neuen Ordnern auf demselben Entwicklungsrechner geprüft. Ein vollständig anderer Windows-PC, andere GPU-Generationen und ein System ohne vorhandenen Grafiktreiber sind damit nicht abgenommen.
-- Standard und XL wurden praktisch gerendert. Die Sprachmodelloptionen 0.6B und 1.7B haben überprüfte Quellen/Hashes, wurden hier aber nicht zusätzlich vollständig installiert und musikalisch geprüft.
-- Der synthetische Trainingslauf prüft Einrichtung, Datenfluss, Gewichte, Index und Umwandlung. Er belegt keine natürliche Identität oder Hörqualität einer echten Stimme.
-- Die automatische MMS-Textzuordnung wurde als optionale Komponente installiert und ihre Lizenzwahl geprüft; keine neue Abnahme der zeitlichen Zuordnung eines echten Songtexts in diesem Paketlauf.
-- Tonlagenplanung, Harmonieintervalle, Gesangstrennung und Pegelkorrektur bleiben hörbare Hilfen mit Fehlergrenzen. Technische Testzahlen ersetzen keine musikalische Hörabnahme.
-- Mac/Linux, MIDI und jede NVIDIA-Generation sind keine Zusage dieses Windows-Kandidaten.
-- Die nicht dauerhaft versionierten nativen Anbieter-URLs bleiben ein dokumentiertes Bezugsrisiko. Ein Austausch stoppt die Installation wegen des Soll-Hashes.
+- Die neue Installation und die Renderproben liefen getrennt auf demselben Windows-Rechner mit RTX 4080 / 16 GB und NVIDIA CUDA-Treiber-API 13.4. Ein anderer Rechner und weitere GPU-/Treibervarianten sind nicht abgenommen.
+- Die LM-Optionen 0.6B und 1.7B haben feste Quellen/Hashes, wurden in diesem Durchlauf nicht zusätzlich installiert oder gerendert. LM 4B wurde geprüft.
+- Stimmtraining, Stimm-/Harmonieumwandlung und Instrumental wurden in der früheren Paketvorbereitung technisch erprobt; hier wurden Umgebung, Assets, API und unveränderte Verarbeitungsdateien geprüft. Kein neuer vollständiger Trainingslauf und keine neue unabhängige Hörabnahme.
+- MMS_FA wurde nach ausdrücklicher Lizenzwahl installiert. Eine neue Abnahme der zeitlichen Textzuordnung eines echten Songs wurde nicht durchgeführt.
+- Tonlagen, Trennung, Harmonien und Pegelkorrektur können Artefakte erzeugen. Weitere Rechenzeit garantiert kein besseres Ergebnis.
+- Mac/Linux, jede NVIDIA-Generation und MIDI sind keine Zusage dieser Windows-Preview.
 
-Der Paketinhalt wird als **Installationskandidat/Preview** bereitgestellt. Eine stabile Versionsnummer und die tatsächliche öffentliche Veröffentlichung werden erst nach Sichtung festgelegt.
+Quellinhalt und SHA-256-Werte sind in PACKAGE-CONTENTS.json und SHA256SUMS.txt nachvollziehbar. Private Entwicklungshistorie, Songs, Aufnahmen und Profile werden nicht veröffentlicht. Download-/Versionsbindung und Lizenzen stehen in downloads-manifest.json beziehungsweise [LIZENZEN.md](LIZENZEN.md).
+
+## Versionsgrenze
+
+Die Originalbasis dieser Ausgabe ist fest auf 8c522ee gesetzt. Während der Paketvorbereitung zeigte die lesende Prüfung bereits acht spätere Original-Commits. Diese sind nicht Bestandteil dieser Preview und werden nicht ungeprüft übernommen. Der Updateknopf kann deshalb weitere Änderungen melden.

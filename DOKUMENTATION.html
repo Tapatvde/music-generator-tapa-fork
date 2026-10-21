@@ -1,9 +1,9 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Music Generator – Tapa Fork: Dokumentation</title><style>
 :root{color-scheme:light;--ink:#213047;--gold:#8b6225}*{box-sizing:border-box}body{margin:0;background:#f3f1ec;color:var(--ink);font:17px/1.65 system-ui,Segoe UI,sans-serif}header{background:#172438;color:#fff;padding:48px max(24px,calc((100vw - 1100px)/2))}header h1{font-size:clamp(25px,4vw,42px);line-height:1.2;margin:0 0 16px}header p{max-width:850px;margin:0}nav{display:flex;flex-wrap:wrap;gap:8px;max-width:1100px;margin:24px auto;padding:0 20px}nav a{border:1px solid #c6baa3;border-radius:7px;padding:8px 14px;background:#fff;text-decoration:none}main{max-width:1100px;margin:auto;padding:0 20px 55px}section{background:#fff;border:1px solid #ddd5c7;border-radius:12px;padding:clamp(20px,4vw,38px);margin:22px 0;scroll-margin-top:15px}h1,h2,h3{line-height:1.3}section h1{font-size:29px;color:#172438}h2{margin-top:32px;font-size:23px}h3{font-size:20px}a{color:#705017;overflow-wrap:anywhere}li{margin:7px 0}code{font:14px/1.5 Consolas,monospace;background:#f2eee6;padding:2px 4px;overflow-wrap:anywhere}pre{background:#172438;color:#fff;padding:18px;overflow:auto;border-radius:8px}pre code{background:transparent;color:inherit;white-space:pre}table{border-collapse:collapse;width:100%;font-size:15px;min-width:600px}th,td{border:1px solid #ded7cb;text-align:left;padding:12px;vertical-align:top}th{background:#f1ecdf}.table-scroll{overflow-x:auto}.source{font-size:14px;border-top:1px solid #ddd;padding-top:15px}strong{color:#172438}header strong{color:#fff}@media print{nav{display:none}body{background:white;font-size:11pt}header{padding:20px;background:white;color:#172438}section{break-before:page;border:none;padding:0}table{font-size:9pt;min-width:0}pre{white-space:pre-wrap}.source{display:none}}
-</style></head><body id="top"><header><h1>Music Generator – Tapa Fork</h1><p>Transparenter Windows-Installationskandidat · Stand 13.10.2026<br>Einrichtung durch Doppelklick auf <strong>Install.bat</strong>. Große Komponenten werden aus den dokumentierten Quellen nachgeladen.</p></header><nav><a href="#start">Überblick</a><a href="#installation">Installation</a><a href="#bedienung">Bedienung</a><a href="#aenderungen">Alle Erweiterungen</a><a href="#lizenzen">Lizenzen</a><a href="#github">GitHub</a><a href="#pruefung">Prüfstatus</a></nav><main><section id="start"><h1>Music Generator – Tapa Fork</h1>
+</style></head><body id="top"><header><h1>Music Generator – Tapa Fork</h1><p>Transparenter Windows-Installationskandidat · Preview 2026.10.21<br>Einrichtung durch Doppelklick auf <strong>Install.bat</strong>. Große Komponenten werden aus den dokumentierten Quellen nachgeladen.</p></header><nav><a href="#start">Überblick</a><a href="#installation">Installation</a><a href="#neu">Neue Ausgabe</a><a href="#bedienung">Bedienung</a><a href="#aenderungen">Alle Erweiterungen</a><a href="#lizenzen">Lizenzen</a><a href="#github">GitHub</a><a href="#pruefung">Prüfstatus</a></nav><main><section id="start"><h1>Music Generator – Tapa Fork</h1>
 <p>Ein transparenter Windows-Fork des <a href="https://github.com/rabbitfiremediacreation/music-generator">Music Generators von ALPHATESTER / rabbitfiremediacreation</a>. Er ergänzt lokale Songgenerierung um eigene Stimmprofile, RVC-Stimmumwandlung, Training, Instrumentalversionen, Originalbearbeitung und erweiterte Gesangssteuerung.</p>
-<p><strong>Status: öffentlicher Quellcode- und Installationskandidat, keine endgültig freigegebene stabile Version.</strong> Stand 13.10.2026, Originalbasis <code>3681b03fe4a91886413f87577ac94e4c2b583416</code>. Der Fork ist eigenständig und wird nicht als offizielle Ausgabe des Originalentwicklers dargestellt.</p>
-<p>Quellrepository: <a href="https://github.com/Tapatvde/music-generator-tapa-fork">Tapatvde/music-generator-tapa-fork</a>.</p>
+<p><strong>Status: öffentlicher Quellcode- und Installationskandidat, keine endgültig freigegebene stabile Version.</strong> Version <strong>2026.10.21-preview.1</strong>, Stand 21.10.2026, Originalbasis <code>8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8</code>. Der Fork ist eigenständig und wird nicht als offizielle Ausgabe des Originalentwicklers dargestellt.</p>
+<p><a href="https://github.com/Tapatvde/music-generator-tapa-fork/releases/tag/2026.10.21-preview.1">Preview herunterladen</a> · Quellrepository: <a href="https://github.com/Tapatvde/music-generator-tapa-fork">Tapatvde/music-generator-tapa-fork</a>.</p>
 <h2>Installation in wenigen Schritten</h2>
 <ol>
 <li>Den vollständigen Ordner aus dem ZIP an einen beschreibbaren Ort entpacken, beispielsweise <code>C:\MusicGeneratorTapa</code>. Nicht im ZIP starten und keine vorhandene Musikinstallation überkopieren.</li>
@@ -12,10 +12,13 @@
 <li>Nach der Installation mit <strong>Music Generator ON.bat</strong> starten. Die Oberfläche läuft lokal unter <strong>http://127.0.0.1:8766/</strong>. Mit <strong>Music Generator OFF.bat</strong> beenden.</li>
 </ol>
 <p>Voraussetzungen: Windows 10/11 x64, NVIDIA-GPU mit aktuellem CUDA-13-kompatiblem Treiber; für RVC in diesem Kandidaten eine kompatible GPU vor der RTX-50-Generation. Die technische Erprobung bezieht sich auf eine RTX 4080 mit 16 GB VRAM. Mindestens 16 GB RAM empfohlen. Etwa 20 GB freier Platz für Musik allein, 35 GB für Musik und Stimmen, mit XL zusätzlich mindestens 6 GB Reserve. Eigene Aufnahmen, Songs und Trainingsstände benötigen weiteren Platz. Es wird kein Systemtreiber installiert und keine Administratorfreigabe benötigt.</p>
+<p>Neue Ausgabe: <a href="#neu">Änderungen seit der bisherigen Preview</a>.</p>
 <p>Details: <a href="#installation">Installation und Wiederaufnahme</a>, <a href="#bedienung">Bedienung</a>, <a href="#aenderungen">Änderungen gegenüber dem Original</a>, <a href="#lizenzen">Lizenzen</a>, <a href="#github">GitHub-Veröffentlichung</a>, <a href="#pruefung">Prüfstatus</a>.</p>
-<p>Die komplette Anleitung lässt sich auch ohne Zusatzprogramm per Doppelklick auf <a href="DOKUMENTATION.html">DOKUMENTATION.html</a> im Browser lesen. Die Markdown-Dateien bleiben als bearbeitbare Textquellen enthalten.</p>
+<p>Die komplette Anleitung lässt sich auch ohne Zusatzprogramm per Doppelklick auf <a href="DOKUMENTATION.html">DOKUMENTATION.html</a> im Browser lesen. Die Markdown-Dateien bleiben als bearbeitbare Textquellen enthalten. scripts/build-documentation.py erzeugt die HTML-Fassung erneut (benötigt das im RVC-Lock enthaltene Markdown-Paket).</p>
 <h2>Was der Fork ergänzt</h2>
 <ul>
+<li>Mikrofonideen aus 5–30 Sekunden Summen/Pfeifen/Gesang in Prompt, BPM, Tonart und Takt übertragen; vorhandene Lyrics, Stil und Länge bleiben erhalten. Keine exakte Melodieübernahme.</li>
+<li>Sprachmodell wahlweise automatisch oder nur auf der CPU; die Klangerzeugung bleibt auf der GPU. Auswahl gilt ab dem nächsten Auftrag.</li>
 <li>Eigene trockene Soloaufnahmen importieren, lokal ein RVC-Stimmprofil trainieren und anschließend im Dropdown verwenden. Keine fremden oder persönlichen Stimmen werden mitgeliefert.</li>
 <li>Bereits fertige oder importierte Songs mit einem anderen Stimmprofil als zusätzliche Fassung bearbeiten; Originale bleiben erhalten.</li>
 <li>Gesang entfernen und eine Instrumentalfassung als feste Grundlage für weitere Stimmversuche verwenden.</li>
@@ -71,7 +74,7 @@
 </tr>
 <tr>
 <td>Musikserver und GGML</td>
-<td>Originalanbieter Serveurperso, geprüfter Dateisnapshot</td>
+<td>festes Original-Release engine-win64-6013134, ZIP-SHA-256</td>
 <td>engine/acestep.cpp/build/Release</td>
 </tr>
 <tr>
@@ -111,16 +114,18 @@
 </tr>
 </tbody>
 </table></div>
-<p>Die Musikserver-URLs sind beim Anbieter <strong>nicht unveränderlich versioniert</strong>. Ein Austausch wird durch die gespeicherten Hashes erkannt; der Installer verwendet dann keine unpassenden Dateien. Vor langfristiger Freigabe sollte der Fork-Betreiber einen zulässigen versionierten Download bereitstellen oder den Snapshot nach erneuter Abnahme aktualisieren. Keine Prüfsummen einfach entfernen.</p>
+<p>Der Musikserver wird aus dem festen <a href="https://github.com/rabbitfiremediacreation/music-generator/releases/tag/engine-win64-6013134">Original-Release engine-win64-6013134</a> geladen. Der Installer prüft den ZIP-Hash vor dem Entpacken, prüft Zielpfade und erhält eine vorherige Laufzeit als Release.previous-Ordner. Modelle liegen außerhalb dieses Austauschs. Fremde Prozesse werden nicht beendet. Eine bereits vollständig geprüfte Laufzeit wird wiederverwendet. Keine Prüfsummen entfernen.</p>
 <p>Auch mit <code>-MusicOnly</code> werden die kleinen RVC-Quelldateien sowie FFmpeg/FFprobe für Audioimport und Deep Mode eingerichtet. Die große RVC-Python-Umgebung und Stimmgrundmodelle entfallen dabei. RVC lässt sich später durch erneuten Install.bat-Aufruf ergänzen.</p>
 <h2>Wiederaufnahme und Einstellungen</h2>
 <p>Ein fehlgeschlagener Download bleibt als <code>.part</code> im lokalen Downloadcache; Install.bat erneut starten setzt ihn fort. Unterstützt der Anbieter keine Byte-Range, bleibt das Teilstück erhalten und der Download beginnt erneut. Vollständig geladene Dateien werden geprüft und wiederverwendet. Abweichende vorhandene Modelldateien werden nicht überschrieben. Eine vollständig heruntergeladene Datei mit falschem Hash wird als <code>.bad-*</code> zur Untersuchung erhalten. Laufende eigene App vor erneuter Installation über OFF beenden. Aufnahmen und trainierte Profile liegen unter data und werden nicht zur Veröffentlichung kopiert.</p>
-<p>Voreinstellungen werden bei einer neuen Installation angelegt; vorhandene Einstellungen bleiben erhalten. Wird XL später nachgeladen, kann es anschließend in Setup beziehungsweise im Deep Mode gewählt werden. Der eigene Updater meldet nur Änderungen des Originals und überschreibt den Fork niemals automatisch. Die Prüfung funktioniert auch bei einer ZIP-Installation ohne Git.</p>
+<p>Voreinstellungen werden bei einer neuen Installation angelegt; vorhandene Einstellungen bleiben erhalten. Ohne -Cpu/-Auto bleibt die gespeicherte CPU-Wahl erhalten. Die Schalter schließen sich aus; Automatisch erhält das bisherige MODE-Testergebnis. Die Gerätewahl kann später unter Zahnrad geändert werden und gilt im Fork ab dem nächsten Auftrag. Wird XL später nachgeladen, kann es anschließend in Setup beziehungsweise im Deep Mode gewählt werden. Der eigene Updater meldet nur Änderungen des Originals und überschreibt den Fork niemals automatisch. Die Prüfung funktioniert auch bei einer ZIP-Installation ohne Git.</p>
 <h2>Optionen für erfahrene Nutzer</h2>
 <pre><code class="language-text">Install.bat -Yes -LM 4B -XL -NoStart
 Install.bat -Yes -MusicOnly -LM 1.7B -NoStart
 Install.bat -Yes -Alignment -AcceptNonCommercialLicense -NoStart
 Install.bat -PlanOnly -LM 4B -XL
+Install.bat -Yes -LM 4B -Cpu -NoStart
+Install.bat -Yes -LM 4B -Auto -NoStart
 </code></pre>
 <p><code>-Yes</code> übernimmt die angegebenen Optionen ohne Fragen: RVC ist dabei enthalten, XL und MMS bleiben ohne ausdrückliche Optionen aus. <code>-PlanOnly</code> zeigt den Plan und schreibt nichts. <code>-AssetCache</code>, <code>-WheelCache</code>, <code>-NoNetwork</code> und <code>-SkipGpuCheck</code> sind Prüf-/Administrationsoptionen; sie gehören nicht zum normalen Doppelklick-Ablauf. Hardwareprüfung nicht umgehen, um eine inkompatible GPU als unterstützt darzustellen.</p>
 <h2>Typische Fehler</h2>
@@ -135,10 +140,30 @@ Install.bat -PlanOnly -LM 4B -XL
 <li><strong>Abbruch während Training:</strong> vorhandene Aufnahmen/Trainingsstände bleiben lokal. Nicht mehrere Trainingseinträge desselben Profils parallel starten.</li>
 </ul>
 <h2>Deinstallation</h2>
-<p>App mit OFF beenden, eigene Songs und Profile sichern und anschließend ausschließlich den selbst gewählten Programmordner entfernen. Es gibt keinen automatischen Löschbefehl für Nutzerdaten, keinen Dienst, keine Registry-Installation und keine global installierte Python-Umgebung.</p><p class="source"><a href="docs/INSTALLATION.md">Textquelle: docs/INSTALLATION.md</a> · <a href="#top">Nach oben</a></p></section><section id="bedienung"><h1>Bedienung der Original- und Fork-Funktionen</h1>
+<p>App mit OFF beenden, eigene Songs und Profile sichern und anschließend ausschließlich den selbst gewählten Programmordner entfernen. Es gibt keinen automatischen Löschbefehl für Nutzerdaten, keinen Dienst, keine Registry-Installation und keine global installierte Python-Umgebung.</p><p class="source"><a href="docs/INSTALLATION.md">Textquelle: docs/INSTALLATION.md</a> · <a href="#top">Nach oben</a></p></section><section id="neu"><h1>2026.10.21-preview.1 – Änderungen seit der öffentlichen Preview vom 13.10.2026</h1>
+<p>Originalbasis jetzt <strong>8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8</strong> statt <strong>3681b03fe4a91886413f87577ac94e4c2b583416</strong>. 40 Original-Commits wurden geprüft übernommen beziehungsweise an den Fork angepasst. Der Windows-Fork bleibt eine Preview; Mac/Linux des Originals sind keine Freigabe unseres RVC-Pakets.</p>
+<h2>Neu und verbessert</h2>
+<ul>
+<li>Mikrofonideen aus 5–30 Sekunden Summen, Pfeifen oder Gesang: lokale Tonhöhenmessung und Beschreibung, Prompt/BPM/Tonart/Takt. Im Fork bleiben vorhandener Titel, Lyrics, Sprache, Instrumentalwahl, Stil und Länge erhalten. Kein Kopieren der konkreten Melodie.</li>
+<li>Sprachmodell Automatisch/Nur CPU unter Zahnrad und -Cpu/-Auto im Installer. CPU-LM und GPU-Klangerzeugung laufen als eigene Auftragsprozesse; die feste neue Engine erhält ausdrücklich --device CPU am Sprachmodellprozess. Eigene Prozesse werden auch bei Teilstart oder Abbruch beendet, fremde Dienste bleiben erhalten.</li>
+<li>Verbindungswiederholung beim Abholen fertiger Musikaufträge, ohne die Generierung erneut auszulösen.</li>
+<li>Sicherer Playerwechsel: vorherige Wiedergabe sofort stoppen; bei raschem Wechsel darf nur die zuletzt gewählte Fassung starten. Originalvergleich und Hörmarken bleiben erhalten.</li>
+<li>Neue Stil-Karten, mehr Prompt-Würfelvarianten, zugängliche Karten/Regler/Fokusmarkierungen, Screenreader-Rückmeldungen und Tastenkürzel mit Simple-/Deep-Bezug. Offene Dialoge schützen das Hintergrundformular.</li>
+<li>Zweiklick-Bestätigung für destruktive Song-/Ordner-/Serveraktionen; ungültige Zahlen und Modellwahlen werden zurückgewiesen.</li>
+<li>Fester Original-Engine-Download <strong>6013134</strong> mit SHA-256, geprüftem Entpacken, Laufzeitsicherung und Wiederverwendung. Die bisherigen veränderlichen nativen Einzeldatei-URLs entfallen.</li>
+<li>Windows-Konfigurationsfehler des Originals behoben: Zeilenliste und Zielpfad haben verschiedene PowerShell-Variablennamen. Gerätewahl und Installer-Fallback werden erhalten.</li>
+<li>App-Lock aktualisiert auf Starlette 1.8.0; alle App-/RVC-Paketversionen und Hashes bleiben nachvollziehbar. RVC-Patch und neutrale öffentliche Stimmvorgaben bleiben erhalten.</li>
+</ul>
+<h2>Erhaltene Fork-Funktionen</h2>
+<p>Stimmimport/-training und Bibliothek, Entfernen/Wiederherstellen, Stimmvarianten fertiger Songs, Instrumentalgrundlagen, Stimmumfang/Oktaven/Abschnittslagen, Refrainharmonien, getrennte Pegelstabilisierung, lokale Aussetzer-Reparatur, Simple/Deep Mode, Standard/XL pro Auftrag, Vorschau→Vollfassung und getrennte Exporte. Vollständige Übersicht: <a href="#aenderungen">Änderungsnachweis</a>.</p>
+<h2>Prüfbarkeit und Grenzen</h2>
+<p>Install.bat bleibt der Einstieg; kein Setup.exe, keine Modelle oder Sängerprofile im ZIP. Herkunft und Lizenzen sind getrennt dokumentiert, MMS_FA bleibt eine ausdrücklich optionale nichtkommerzielle Komponente. Neu durchgeführte Paketprüfungen und historische Entwicklungsprüfungen sind im <a href="#pruefung">Prüfstatus</a> getrennt. Ein anderer PC, sämtliche GPU-/Treibervarianten und eine neue unabhängige musikalische Stimmabnahme bleiben offen.</p><p class="source"><a href="docs/CHANGELOG-20261021.md">Textquelle: docs/CHANGELOG-20261021.md</a> · <a href="#top">Nach oben</a></p></section><section id="bedienung"><h1>Bedienung der Original- und Fork-Funktionen</h1>
 <h2>Neue Songs im Simple Mode</h2>
 <p>Titel optional, Prompt und Stil beschreiben die gewünschte Musik. Länge, BPM, Lyrics, Sprache, Tonart und Taktmaß können angegeben werden; automatische Angaben bleiben möglich. Mehrere Varianten erhalten eigene Seeds und Versionsbuchstaben. Das Logo importiert eine Aufnahme zur Analyse: Es erzeugt Textvorschläge und ist kein Garant für eine originalgetreue Coverfassung.</p>
 <p>Optional ein fertig trainiertes Stimmprofil für die zusätzliche Stimmversion auswählen. Die musikalische Originalfassung wird zuerst erzeugt und erhalten. Die automatische Folgeumwandlung benötigt Gesang, vollständige Fassung und bei automatisch zugeordneten Harmonien passend markierte Lyrics.</p>
+<h2>Mikrofonideen und Sprachmodellgerät</h2>
+<p>Mit dem Mikrofonknopf in der Kopfzeile 5 bis 30 Sekunden summen, pfeifen oder singen. Gedrückthalten nimmt auf, Loslassen beendet die Aufnahme; für assistive Bedienung ist Umschalten vorgesehen, Alt+R ebenfalls. Der Browser kann dafür eine Mikrofonfreigabe verlangen. Die lokale Auswertung ersetzt Prompt, BPM, Tonart und Takt, erhält aber den vorhandenen Titel, Songtext, Gesangssprache, Instrumentalwahl, Stil und Länge. Sie überträgt die konkrete Melodie nicht als Audiovorlage; dafür Deep Mode verwenden. Die Idee wird nicht in der Bibliothek gespeichert.</p>
+<p>Unter Zahnrad › Sprachmodell rechnet auf zwischen Automatisch und Nur CPU wählen. Dies ist unabhängig von Standard/XL. Die Klangerzeugung bleibt auf der GPU. Die neue Auswahl gilt ab dem nächsten Auftrag; laufende Aufträge behalten ihre Wahl. Im Normalfall Automatisch verwenden. Nur CPU kann bei Problemen mit der Sprachmodellberechnung helfen, ist aber kein allgemeiner Klangqualitätsregler.</p>
 <h2>Eigene Stimmprofile</h2>
 <ol>
 <li><strong>Stimmprofile verwalten / Manage voice profiles</strong> öffnen.</li>
@@ -177,7 +202,7 @@ Install.bat -PlanOnly -LM 4B -XL
 <p>Eine Vollfassung folgt der Länge der Audio-Vorlage, maximal zehn Minuten. Sie ist eine neue Synthese und keine garantierte identische Verlängerung der Vorschau. Exakte Akkord-, Melodie-, Struktur- oder Klangtreue wird nicht zugesichert. Es gibt keinen MIDI-/Logic-Projektimport.</p>
 <h2>Bibliothek und Schutz</h2>
 <p>Ordner, Suche, Favoriten, Downloads und Endfassungsmarkierung helfen beim Vergleichen. Ein verwendetes Original und verwendete Stimmprofile sind gegen unpassende Entfernung geschützt. Musikgenerierung, Stimme und Training teilen sich eine GPU-Warteschlange. Abbruch wird vor dem nächsten Auftrag verarbeitet. Der Updatebutton zeigt neue Originaländerungen an, übernimmt sie im Fork jedoch nie ungeprüft.</p><p class="source"><a href="docs/BEDIENUNG.md">Textquelle: docs/BEDIENUNG.md</a> · <a href="#top">Nach oben</a></p></section><section id="aenderungen"><h1>Änderungsnachweis gegenüber dem Original</h1>
-<p>Original: <a href="https://github.com/rabbitfiremediacreation/music-generator">rabbitfiremediacreation/music-generator</a>, MIT, Copyright ALPHATESTER. Vergleichsbasis dieser Ausgabe: <code>3681b03fe4a91886413f87577ac94e4c2b583416</code>. Stand 13.10.2026. Dies ist ein dokumentierter Installationskandidat; eine semantische stabile Versionsnummer wurde noch nicht festgelegt.</p>
+<p>Original: <a href="https://github.com/rabbitfiremediacreation/music-generator">rabbitfiremediacreation/music-generator</a>, MIT, Copyright ALPHATESTER. Vergleichsbasis dieser Ausgabe: <code>8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8</code>. Stand 21.10.2026, Version 2026.10.21-preview.1. Dies bleibt ein dokumentierter Installationskandidat, keine stabile Freigabe.</p>
 <h2>Funktionsübersicht</h2>
 <div class="table-scroll"><table>
 <thead>
@@ -311,7 +336,8 @@ Install.bat -PlanOnly -LM 4B -XL
 </tr>
 </tbody>
 </table></div>
-<h2>Original-Updates, die bereits enthalten sind</h2>
+<p>Siehe zusätzlich <a href="#neu">Änderungen der neuen Preview</a>.</p>
+<h2>Historische Originalbasis vom 13.10.2026</h2>
 <p>Die Ausgangsfassung integriert die Originaländerungen bis <code>3681b03</code>: zwölf Oberflächensprachen, zentrale Servermeldungen, optionale XL-Installation, Entfernung des Testton-Backends, überarbeitete Installationsanleitungen und verständliche Meldungen für unerwartete Serverfehler. Für die Veröffentlichung werden die Original-Anleitungen durch die konsistenten Fork-Anleitungen dieses Ordners ersetzt. Aufbewahrte Copyright-Hinweise und Links belegen die Herkunft.</p>
 <h2>Zuordnung zum Quellcode</h2>
 <div class="table-scroll"><table>
@@ -379,7 +405,7 @@ Install.bat -PlanOnly -LM 4B -XL
 <h2>Neutrale Veröffentlichung statt persönlicher Arbeitskopie</h2>
 <p>Keine persönliche Stimme wird vorgewählt oder vorausgesetzt. Profilnamen stammen aus den jeweiligen Nutzerdateien; der beobachtete Mittelpunkt stammt aus den eigenen Trainingsmetadaten. Ein importiertes Modell ohne Umfangsanalyse erhält nur unbestätigte Eingabewerte und keine aktive pauschale persönliche Begrenzung. Die persönliche Entwicklungsbibliothek, Testberichte, Screenshots, Zugangsdaten und Git-Historie sind nicht Teil dieses Ordners.</p>
 <p>Die Veröffentlichung erhält später die öffentliche Originalhistorie als Vorgänger und einen bereinigten zusätzlichen Commit. Die private Entwicklungsinstallation wird nicht bereinigt, umgeschrieben oder als Ganzes hochgeladen.</p><p class="source"><a href="docs/AENDERUNGEN.md">Textquelle: docs/AENDERUNGEN.md</a> · <a href="#top">Nach oben</a></p></section><section id="lizenzen"><h1>Code, Modelle und Werkzeuge haben getrennte Lizenzen</h1>
-<p>Stand 13.10.2026. Diese Übersicht dokumentiert Herkunft und Bedingungen; sie ist keine pauschale kommerzielle Freigabe sämtlicher Komponenten oder erzeugter Musik. Die maßgeblichen Originaltexte sind verlinkt und werden, soweit in Archiven enthalten, lokal mit heruntergeladen.</p>
+<p>Stand 21.10.2026. Diese Übersicht dokumentiert Herkunft und Bedingungen; sie ist keine pauschale kommerzielle Freigabe sämtlicher Komponenten oder erzeugter Musik. Die maßgeblichen Originaltexte sind verlinkt und werden, soweit in Archiven enthalten, lokal mit heruntergeladen.</p>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -391,7 +417,7 @@ Install.bat -PlanOnly -LM 4B -XL
 <tbody>
 <tr>
 <td>Music Generator</td>
-<td><a href="https://github.com/rabbitfiremediacreation/music-generator/blob/3681b03fe4a91886413f87577ac94e4c2b583416/LICENSE">Original-LICENSE</a></td>
+<td><a href="https://github.com/rabbitfiremediacreation/music-generator/blob/8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8/LICENSE">Original-LICENSE</a></td>
 <td>MIT, Copyright ALPHATESTER bleibt enthalten</td>
 </tr>
 <tr>
@@ -492,136 +518,94 @@ Install.bat -PlanOnly -LM 4B -XL
 <p>Nur eigene Aufnahmen oder Aufnahmen mit ausdrücklicher passender Erlaubnis verwenden. Ein frei verfügbares Programm oder Modell macht fremde Gesangsaufnahmen und Sängeridentitäten nicht automatisch zur freien Trainingsgrundlage. Eigene Songs, Texte, Samples, trainierte Profile und Modelle werden nicht automatisch veröffentlicht. Vor jedem öffentlichen Upload getrennt prüfen, was tatsächlich in den Dateien und im Git-Verlauf steckt.</p>
 <h2>Weitergabe von Binärdateien</h2>
 <p>Dieses Quellpaket verteilt keine Modellgewichte oder ausführbaren Laufzeitdateien. Es beschreibt und prüft ihre Downloads. Wer später einen eigenen vollständigen Offline-Download oder native Binär-Releases hostet, muss dafür die jeweiligen Redistributions-, Hinweis- und gegebenenfalls Quellcodepflichten gesondert erfüllen. Der MIT-Hinweis des Forks reicht dafür nicht aus.</p>
-<p>Original-Lizenztexte in heruntergeladenen Archiven bleiben erhalten. Die App-lokal extrahierten CUDA-/VC++-Wheel-Lizenztexte liegen unter engine/acestep.cpp/third-party-licenses. Nach einer Installation können weitere Python-Paketlizenzen in den jeweiligen <code>.dist-info</code>-Verzeichnissen eingesehen werden.</p><p class="source"><a href="docs/LIZENZEN.md">Textquelle: docs/LIZENZEN.md</a> · <a href="#top">Nach oben</a></p></section><section id="github"><h1>Einen korrekt zugeordneten GitHub-Fork veröffentlichen</h1>
-<h2>Was ein GitHub-Fork bedeutet</h2>
-<p>Ein Fork ist ein eigenes Repository unter Deinem Konto, das GitHub dem Originalprojekt zuordnet. Es wird über <strong>Fork → Create fork</strong> am Original angelegt. Ein beliebiges neues Repository und ein ZIP-Upload allein stellen diese Beziehung nicht her. Eine Änderung des Originals ist dafür nicht erforderlich. Ein Pull Request ist nur nötig, wenn der Originalentwickler ausgewählte Änderungen in sein eigenes Projekt übernehmen soll.</p>
-<p>Offizielle Anleitung: <a href="https://docs.github.com/en/pull-requests/how-tos/work-with-forks/fork-a-repo">GitHub – Fork a repository</a>.</p>
-<h2>Empfohlener Ablauf für dieses Paket</h2>
-<ol>
-<li>Unter Deinem Konto <strong>Tapatvde</strong> auf <a href="https://github.com/rabbitfiremediacreation/music-generator">die Originalseite</a> gehen und <strong>Fork</strong> anklicken.</li>
-<li>Als Besitzer <strong>Tapatvde</strong> wählen. Empfohlener Name: <strong>music-generator-tapa-fork</strong>. Beschreibung: „Windows fork with local voice profiles, RVC training, original-song editing and optional XL sound model.“ Nur den Hauptzweig kopieren genügt.</li>
-<li><strong>Create fork</strong> ausführen. GitHub zeigt danach die Herkunft „forked from rabbitfiremediacreation/music-generator“ an. Ein Fork eines öffentlichen Projekts ist ebenfalls öffentlich.</li>
-<li>Den neuen Fork für die verbundene GitHub-App freigeben, falls Deine App-Verbindung nur ausgewählte Repositories sehen darf. Es werden keine Zugangsdaten im Chat oder in Dateien benötigt.</li>
-<li>Den bereinigten Paketinhalt als zusätzlichen Commit auf Basis der öffentlichen Originalhistorie übertragen. <strong>Nicht den privaten Arbeitszweig oder die gesamte private Installation pushen.</strong> Auch alte gelöschte Inhalte können im privaten Git-Verlauf vorhanden sein.</li>
-<li>Auf GitHub README, LICENSE, Install.bat, Downloadmanifest und Dateien prüfen. Anschließend gegebenenfalls einen als Vorabversion markierten Release anlegen und Dein selbst erstelltes Quell-ZIP anhängen.</li>
-<li>Download dieses GitHub-Releases in einen neuen Ordner testen. Die technische Paketprüfung und ein erster eigener Hörtest gehören getrennt dokumentiert.</li>
-</ol>
-<h2>Aktuell geprüfte Automatisierung</h2>
-<p>Der öffentliche Fork <strong>Tapatvde/music-generator-tapa-fork</strong> wurde über die angemeldete Browser-Sitzung erstellt. Die Verbindung zum Original ist erhalten. Nach gesonderter Installation des offiziellen ChatGPT Codex Connector für dieses Repository bestehen die erforderlichen Schreibrechte; Kontoautorisierung allein war dafür nicht ausreichend.</p>
-<p>Die vorhandenen GitHub-Werkzeuge übertragen ausschließlich den bereinigten Quellordner als zusätzlichen Commit auf Basis der öffentlichen Originalhistorie. Die private Arbeitsinstallation und ihre Git-Historie bleiben lokal. Es wurde kein Kommentar an den Originalentwickler gesendet. Eine nummerierte stabile Veröffentlichung beziehungsweise ein GitHub-Release ist eine gesonderte spätere Entscheidung.</p>
-<h2>Was auf GitHub gehört</h2>
-<p>Quellcode, lesbare Installationsskripte, Dokumentation, Herkunfts-/Lizenzhinweise und Prüfsummen. Die großen Komponenten werden nachgeladen. Eigene Stimmen, Aufnahmen, trainierte Gewichte, Indizes, Datenbanken, lokale Pfade, Zugangsdaten, Logs und private Historie gehören nicht in das öffentliche Repository.</p>
-<p>GitHub warnt ab 50 MiB pro Datei und blockiert reguläre Git-Dateien über 100 MiB; Releases erlauben größere Anlagen innerhalb ihrer eigenen Grenzen. Ein Modell-Upload ist für diesen Fork weder erforderlich noch vorgesehen. <a href="https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github">Offizielle Größenregeln</a>.</p>
-<h2>Vor der tatsächlichen Veröffentlichung festlegen</h2>
-<ul>
-<li>Endgültiger Repository-Name und Beschreibung; eigene Kontakt-/Supportangaben nur auf ausdrücklichen Wunsch.</li>
-<li>Bezeichnung als Preview/Alpha und eine Versionsnummer, sobald Du sie freigibst.</li>
-<li>Ob automatische NC-Textzuordnung angeboten und in welchem Umfang kommerzielle Nutzung unterstützt werden soll.</li>
-<li>Nachweis eines weiteren Installationsversuchs auf einem anderen passenden Rechner und Hörabnahme mit einem eigenen neuen Profil.</li>
-<li>Langfristig versionierte Bezugsquelle für die geprüften Musikserver-Binärdateien.</li>
-<li>Ob der Originalentwickler zusätzlich informiert oder ein konkreter Pull Request angeboten werden soll; das wird nicht automatisch gesendet.</li>
-</ul>
-<h2>Fortschritt am 13.10.2026</h2>
-<p>Der Fork ist <a href="https://github.com/Tapatvde/music-generator-tapa-fork">hier erreichbar</a>. Vergleichsbasis ist der öffentliche Originalcommit 3681b03fe4a91886413f87577ac94e4c2b583416. Das Quellpaket ist als Installationskandidat/Preview gekennzeichnet.</p>
-<p>Der erste Schreibversuch meldete HTTP 403 „Resource not accessible by integration“. Anschließend wurde zwischen Kontoautorisierung und Repository-Installation unterschieden. Nach der Installation des Connectors durch den Kontoinhaber wurde das Repository sichtbar und ein Schreibtest erfolgreich durchgeführt. Zugangsdaten und Bestätigungscodes sind nicht Teil dieses Pakets.</p><p class="source"><a href="docs/GITHUB.md">Textquelle: docs/GITHUB.md</a> · <a href="#top">Nach oben</a></p></section><section id="pruefung"><h1>Prüfstatus des Installationskandidaten</h1>
-<p>Stand 13.10.2026. Die Ergebnisse stammen aus dieser Paketvorbereitung. Technische Laufzeitprüfungen und persönliche Hörabnahme sind getrennte Nachweise.</p>
-<h2>Aktuell durchgeführte Prüfungen</h2>
+<p>Original-Lizenztexte in heruntergeladenen Archiven bleiben erhalten. Die App-lokal extrahierten CUDA-/VC++-Wheel-Lizenztexte liegen unter engine/acestep.cpp/third-party-licenses. Nach einer Installation können weitere Python-Paketlizenzen in den jeweiligen <code>.dist-info</code>-Verzeichnissen eingesehen werden.</p><p class="source"><a href="docs/LIZENZEN.md">Textquelle: docs/LIZENZEN.md</a> · <a href="#top">Nach oben</a></p></section><section id="github"><h1>GitHub und Veröffentlichung</h1>
+<p>Öffentlicher Fork: <a href="https://github.com/Tapatvde/music-generator-tapa-fork">Tapatvde/music-generator-tapa-fork</a>, weiterhin mit dem <a href="https://github.com/rabbitfiremediacreation/music-generator">Originalprojekt</a> verbunden.</p>
+<p>Die Ausgabe <strong>2026.10.21-preview.1</strong> aktualisiert den bisherigen öffentlichen Preview-Stand. Zuvor gab es keinen eigenen Release-Tag. Diese Ausgabe bleibt ein GitHub-Prerelease; eine nummerierte Preview ist keine stabile Freigabe.</p>
+<p>Die öffentliche Historie enthält die bisherige öffentliche Fork-Historie, öffentliche Originaländerungen und einen bereinigten Quellstand. Die private Entwicklungshistorie wird nicht gepusht. Die Veröffentlichungs-Commits verwenden GitHubs noreply-Adresse.</p>
+<h2>Installation und Kontrolle</h2>
+<p>Das Release-ZIP vollständig in einen neuen Ordner entpacken und Install.bat doppelklicken. PACKAGE-CONTENTS.json beschreibt jede Quelldatei; SHA256SUMS.txt enthält die zugehörigen Prüfsummen. Das Release bietet außerdem einen SHA-256 für die vollständige ZIP. Downloads und große Modelle werden erst vom sichtbaren Installer eingerichtet. Keine Nutzerstimmen, trainierten Profile oder Songs werden mitgeliefert.</p>
+<h2>Bisherige Installation</h2>
+<p>Für diese Preview ist die sichere Variante eine parallele Installation in einem neuen Ordner. Die bisherige Installation zunächst behalten. Eigene Songs lassen sich über Fertigen Song importieren übernehmen. Stimmprofile und Trainingshistorie sind lokal und werden nicht automatisch zwischen Installationen migriert. Nicht die ganze neue ZIP blind über eine laufende Installation kopieren. Ein automatischer Fork-Updater ist nicht enthalten; der Button prüft nur lesend die Originaländerungen.</p>
+<h2>Rückmeldungen und Beiträge</h2>
+<p>Fehler mit Preview-Version, Windows-/GPU-Version, nachvollziehbaren Schritten und bereinigter Fehlermeldung melden. Persönliche Songs, Trainingsaufnahmen, Modelle, Logs mit privaten Pfaden und Zugangsdaten nicht ungeprüft an Issues anhängen. Änderungen über einen eigenen Branch und Pull Request anbieten. Keine Nachricht oder Pull Request wird durch die Installation automatisch an den Originalentwickler gesendet.</p><p class="source"><a href="docs/GITHUB.md">Textquelle: docs/GITHUB.md</a> · <a href="#top">Nach oben</a></p></section><section id="pruefung"><h1>Prüfstatus – 2026.10.21-preview.1</h1>
+<p>Stand 21.10.2026. Diese Ausgabe ist eine <strong>Preview / ein Installationskandidat</strong>. Die folgende Tabelle beschreibt die neue Paketprüfung; frühere Ergebnisse stehen getrennt unter <a href="docs/PRUEFSTATUS-20261013.md">Prüfstatus vom 13.10.2026</a>.</p>
 <div class="table-scroll"><table>
 <thead>
 <tr>
-<th>Prüfung</th>
+<th>Neu geprüfter Bereich</th>
 <th>Ergebnis</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Bereinigter Quellordner</td>
-<td>Keine Nutzeraudios, Modelle, Datenbank, Zugangsdaten, persönlichen Pfade oder private Git-Historie enthalten; Dateiliste und SHA-256-Prüfsummen separat mitgeliefert</td>
+<td>Transparenter Einstieg</td>
+<td>Install.bat → Install.ps1, Windows PowerShell 5.1; kein EXE-Setup</td>
 </tr>
 <tr>
-<td>Quellsyntax</td>
-<td>34 Python-Dateien, 6 JavaScript-Dateien und 4 PowerShell-Dateien ohne Syntaxfehler</td>
+<td>Getrennte Neuinstallation</td>
+<td>Neue CPython-3.12.15-Laufzeit; 18 App-Pakete und 127 RVC-Pakete aus den Versions-/Hash-Locks eingerichtet. Standard, XL, LM 4B und optional MMS aus verifizierten allgemeinen Downloads eingerichtet; keine privaten Aufnahmen oder Profile kopiert</td>
 </tr>
 <tr>
-<td>Eintrittspunkt</td>
-<td>Install.bat ruft lesbare Install.ps1 auf; keine Setup.exe; Windows PowerShell 5.1 verwendet</td>
+<td>RVC-Laufzeit</td>
+<td>Feste Quellrevision und Patch auf elf Dateien geprüft; PyTorch 2.7.1+cu118, CUDA-Matrix und Trainingsgrundmodelle in der neuen Installation geprüft</td>
 </tr>
 <tr>
-<td>RVC-Grundlage</td>
-<td>Festes Quellarchiv geprüft; sichtbarer Patch auf 11 Dateien angewendet; Markierung mit Quellrevision und Datei-Hashes kontrolliert</td>
+<td>Laufender Server</td>
+<td>Neue Installation ohne persönliche Profile/Songs gestartet; CPU-Auswahl des Installers gelesen, per API auf Automatisch zurückgestellt, XL erkannt und lesender Original-Updatepfad geprüft; Testserver anschließend beendet</td>
 </tr>
 <tr>
-<td>Neue Installation</td>
-<td>Neue Python-3.12.15-Laufzeit, neue App- und RVC-Umgebungen; 18 App- und 127 RVC-Pakete aus Hash-Locks eingerichtet; Standard, XL, LM 4B und optional MMS installiert</td>
+<td>Paket-API</td>
+<td>10 Prüfungen für leere Profilbibliothek, neutrale Vorgaben, Import, Entfernen/Wiederherstellen, Deep-Vollfassung, Vorschaugrenzen, Update-Sperre und Fehlermeldungen bestanden</td>
 </tr>
 <tr>
-<td>Wiederaufnahme</td>
-<td>Erledigte Dateien wiederverwendet; vorhandene Einstellungen erhalten; unterbrochenes RVC-Archiv erfolgreich neu geladen, weil der Anbieter keine Byte-Range unterstützt</td>
+<td>Verbindungs-/Einstellungsregression</td>
+<td>Neun zusätzliche Prüfungen für Zahlen, Modellwahl, Fork-Stopp und Abrufwiederholung bestanden</td>
 </tr>
 <tr>
-<td>Download-/Schutzprobe</td>
-<td>RVC-Archiv über den tatsächlichen curl-Downloadweg geladen und gehasht; falscher Cache und Pfad außerhalb des Programmordners ausdrücklich abgewiesen</td>
+<td>CPU-Konfiguration und Prozesse</td>
+<td>14 Prüfungen für CPU/Auto, Konfigurationsschutz, Validierung, eigenen Serverstart, CLI-Gerätewahl und Aufräumen nach Erfolg/Fehler/Abbruch bestanden</td>
 </tr>
 <tr>
-<td>Musik-only-Option</td>
-<td>Separater neuer Ordner ohne RVC-Python/Stimmgrundmodelle; Audioimport/Deep-Vollauftrag und alle zehn API-Fälle erfolgreich</td>
+<td>Oberfläche als JavaScript</td>
+<td>Sechs Prüfgruppen für Modellwahl, Vorschau→Vollfassung, Mikrofonidee, Tastenkürzel, Sprachen und Player/Hörmarken bestanden. Mikrofon nur simuliert, keine echte Aufnahme</td>
 </tr>
 <tr>
-<td>Offline-Cache-Probe</td>
-<td>Vollständige zweite Einrichtung aus verifizierten allgemeinen Downloads und Paketcache ohne neue Netzwerkdownloads erfolgreich</td>
+<td>Windows-Installer</td>
+<td>Zwei native PowerShell-Prüfgruppen: echte CPU-/Auto-Konfigurationsdateien und Optionsplan; native Laufzeit mit Wiederverwendung, Sicherung/Rücksetzen, Port-/Hash-/ZIP-/Pfadschutz. Synthetische Archive und Dateien, keine Nutzerdaten</td>
 </tr>
 <tr>
-<td>GPU</td>
-<td>RTX 4080 / 16 GB; CUDA-Treiber-API, PyTorch 2.7.1+cu118, endliche CUDA-Matrixergebnisse und lokale Trainingsgrundmodelle geprüft</td>
+<td>Offline-Wiederaufnahme</td>
+<td>Vollständiger Installer erneut mit -NoNetwork, -Cpu, XL und optionalem MMS ausgeführt; verifizierte Laufzeit/Modelle und beide Paketumgebungen wiederverwendet, CPU-Wahl gespeichert</td>
 </tr>
 <tr>
-<td>Musikgeneration</td>
-<td>Standard und XL jeweils erfolgreich über den neu geladenen nativen Windows-Musikserver gerendert; 48-kHz-Ausgaben mit endlichem, nichtleerem Signal</td>
+<td>Neuer nativer Musikserver</td>
+<td>Fester Original-Build 6013134 aus der ZIP mit erwartetem SHA-256; in der getrennten Installation tatsächlich ausgeführt</td>
 </tr>
 <tr>
-<td>Trainingsablauf</td>
-<td>48 Sekunden synthetisches, nichtpersönliches Tonmaterial importiert; 50 Trainingsrunden, Modell-/Indexexport, anschließende Umwandlungsprobe und Anzeige im Dropdown erfolgreich</td>
+<td>Standard-Render</td>
+<td>LM automatisch, Synthese CUDA0; gültige 48-kHz-Stereo-WAV, 7,20 Sekunden Audio, 10,39 Sekunden Laufzeit</td>
 </tr>
 <tr>
-<td>Stimmauftrag</td>
-<td>Neu generierter Gesang mit dem neuen Testprofil umgewandelt; manuelle höhere Oktavharmonie (+12) und beide Pegelstabilisierungen aktiv; gültige Ausgaben und Exporte</td>
-</tr>
-<tr>
-<td>Instrumental</td>
-<td>Instrumentalversion der exakt gewählten Stimmfassung erfolgreich exportiert; Schutz der Quelldatei bestätigt</td>
-</tr>
-<tr>
-<td>API-Prüfungen</td>
-<td>10 bestandene Fälle: Originalimport, neutrale Vorgaben, Deep-Vollaufträge, Vorschaugrenze, Profilentfernung/Wiederherstellung, Validierung, Fehlermeldungen und geschützte Updateprüfung</td>
-</tr>
-<tr>
-<td>Oberfläche</td>
-<td>Simple/Deep Mode, sichtbare Standard-/XL-Auswahl und neues synthetisches Profil in der Profilverwaltung geprüft</td>
-</tr>
-<tr>
-<td>Lizenz/Herkunft</td>
-<td>Original-LICENSE unverändert; Code, Modelle, Laufzeiten und optionale NC-Komponente getrennt dokumentiert</td>
-</tr>
-<tr>
-<td>GitHub</td>
-<td>Öffentlicher Fork korrekt angelegt; Konto-/Repositoryfreigabe und erfolgreicher Schreibtest geprüft; Quellpaket als Preview, keine nummerierte stabile Freigabe</td>
+<td>XL-Render</td>
+<td>LM tatsächlich CPU, Synthese CUDA0; gültige 48-kHz-Stereo-WAV, 7,04 Sekunden Audio, 22,45 Sekunden Laufzeit</td>
 </tr>
 </tbody>
 </table></div>
-<p>Allgemeine vorab geladene Archive und Gewichte dürfen nach erneuter Hashprüfung als Cache wiederverwendet werden. Keine private Python-Umgebung, Aufnahme oder persönliche Stimme wurde in die neue Installation kopiert. Die neuen Python-Pakete wurden aus den dokumentierten Paketquellen eingerichtet.</p>
-<h2>Während der Vorbereitung behobene Setupfehler</h2>
-<p>Der erste Patch-Installer konnte einen fehlenden abschließenden Zeilenumbruch nicht behandeln. Die strikte Patch-Anwendung unterstützt diesen Fall jetzt. Die erste Laufzeitprüfung versuchte außerdem App-Module in der RVC-Umgebung zu importieren, obwohl beide Umgebungen bewusst verschiedene Pydantic-Versionen verwenden. Die Prüfung verwendet jetzt die zur jeweiligen Umgebung gehörenden Module und kontrolliert die lokalen Trainingsdateien direkt. Beide Fehler wurden vor Abschluss des Kandidaten behoben. Beim Test über die BAT-Datei war außerdem die automatische Bereitstellung der PowerShell-Funktion Get-FileHash in einer Aufrufumgebung nicht verfügbar. Der Installer berechnet SHA-256 deshalb direkt über .NET und ruft die Windows-PowerShell ausdrücklich über ihren Systempfad auf.</p>
-<p>Ein reines synthetisches Tonbeispiel wurde vom Trennmodell nicht als nutzbarer Gesang erkannt. Die App brach den Auftrag sichtbar ab. Die anschließende Stimm-/Instrumentalprobe verwendete deshalb neu generierten Gesang. Ein einmaliger Verbindungsabbruch des externen Test-Abfrageprogramms während des Trainings betraf nicht den Trainingslauf: Dieser schloss erfolgreich ab und wurde anschließend erneut über die API geprüft.</p>
-<h2>Bereits vorhandene technische Basis</h2>
-<p>Die private Arbeitsfassung bestand zuvor 115 Python-Prüfungen für Queue, RVC, Profile/Training, Instrumental, Deep Mode, XL, Pegel und Gesangsaussetzer sowie weitere Browser-/Sprachprüfungen. Diese historischen Ergebnisse sind lediglich die Ausgangsbasis; sie werden nicht als neu durchgeführte Paketprüfungen gezählt.</p>
-<h2>Grenzen und noch offene Abnahme</h2>
+<p>Die Renderproben sind kurze technische Instrumentalproben mit 50 Schritten. Die Requestlänge war jeweils zehn Sekunden; das Modell lieferte die oben gemessenen kürzeren Ausgaben. Das belegt den technischen Ablauf, keine musikalische Qualitätsverbesserung oder Identität einer Sängerperson.</p>
+<h2>Während dieser Vorbereitung behoben</h2>
+<p>Windows PowerShell 5.1 übergab einen untypisierten Nullwert beim atomaren Dateiaustausch als ungültigen Backup-Pfad. Der Installer verwendet nun ausdrücklich NullString.Value; der reale Dateischreibtest besteht.</p>
+<p>Die neue native Engine ignorierte die bisherige GGML_BACKEND-Umgebungswahl für das Sprachmodell. Die echte Probe erkannte, dass es trotz CPU-Auswahl auf CUDA lief. Der Veröffentlichungsstand setzt zusätzlich den dokumentierten Startparameter <code>--device CPU</code> ausschließlich am CPU-Kindprozess. Die erneute Probe weist LM=CPU und Synthese=CUDA0 nach; die Tests prüfen auch den konkreten Parameter.</p>
+<h2>Historische Entwicklungsregression</h2>
+<p>Vor dem Paketexport bestand die lokale Entwicklungsfassung 138 Python-Prüfungen und sechs JavaScript-Prüfgruppen. Stimmen, Training, Instrumental, Deep, XL, Tonlagen, Harmonien, Pegel und Reparaturen waren enthalten. Diese 138 werden <strong>nicht</strong> als zusätzlich neu ausgeführte Tests des bereinigten Pakets gezählt; hier wurden 33 Python-Tests, sechs JavaScript- und zwei PowerShell-Prüfgruppen ausgeführt.</p>
+<h2>Grenzen</h2>
 <ul>
-<li>Die Installation wurde in getrennten neuen Ordnern auf demselben Entwicklungsrechner geprüft. Ein vollständig anderer Windows-PC, andere GPU-Generationen und ein System ohne vorhandenen Grafiktreiber sind damit nicht abgenommen.</li>
-<li>Standard und XL wurden praktisch gerendert. Die Sprachmodelloptionen 0.6B und 1.7B haben überprüfte Quellen/Hashes, wurden hier aber nicht zusätzlich vollständig installiert und musikalisch geprüft.</li>
-<li>Der synthetische Trainingslauf prüft Einrichtung, Datenfluss, Gewichte, Index und Umwandlung. Er belegt keine natürliche Identität oder Hörqualität einer echten Stimme.</li>
-<li>Die automatische MMS-Textzuordnung wurde als optionale Komponente installiert und ihre Lizenzwahl geprüft; keine neue Abnahme der zeitlichen Zuordnung eines echten Songtexts in diesem Paketlauf.</li>
-<li>Tonlagenplanung, Harmonieintervalle, Gesangstrennung und Pegelkorrektur bleiben hörbare Hilfen mit Fehlergrenzen. Technische Testzahlen ersetzen keine musikalische Hörabnahme.</li>
-<li>Mac/Linux, MIDI und jede NVIDIA-Generation sind keine Zusage dieses Windows-Kandidaten.</li>
-<li>Die nicht dauerhaft versionierten nativen Anbieter-URLs bleiben ein dokumentiertes Bezugsrisiko. Ein Austausch stoppt die Installation wegen des Soll-Hashes.</li>
+<li>Die neue Installation und die Renderproben liefen getrennt auf demselben Windows-Rechner mit RTX 4080 / 16 GB und NVIDIA CUDA-Treiber-API 13.4. Ein anderer Rechner und weitere GPU-/Treibervarianten sind nicht abgenommen.</li>
+<li>Die LM-Optionen 0.6B und 1.7B haben feste Quellen/Hashes, wurden in diesem Durchlauf nicht zusätzlich installiert oder gerendert. LM 4B wurde geprüft.</li>
+<li>Stimmtraining, Stimm-/Harmonieumwandlung und Instrumental wurden in der früheren Paketvorbereitung technisch erprobt; hier wurden Umgebung, Assets, API und unveränderte Verarbeitungsdateien geprüft. Kein neuer vollständiger Trainingslauf und keine neue unabhängige Hörabnahme.</li>
+<li>MMS_FA wurde nach ausdrücklicher Lizenzwahl installiert. Eine neue Abnahme der zeitlichen Textzuordnung eines echten Songs wurde nicht durchgeführt.</li>
+<li>Tonlagen, Trennung, Harmonien und Pegelkorrektur können Artefakte erzeugen. Weitere Rechenzeit garantiert kein besseres Ergebnis.</li>
+<li>Mac/Linux, jede NVIDIA-Generation und MIDI sind keine Zusage dieser Windows-Preview.</li>
 </ul>
-<p>Der Paketinhalt wird als <strong>Installationskandidat/Preview</strong> bereitgestellt. Eine stabile Versionsnummer und die tatsächliche öffentliche Veröffentlichung werden erst nach Sichtung festgelegt.</p><p class="source"><a href="docs/PRUEFSTATUS.md">Textquelle: docs/PRUEFSTATUS.md</a> · <a href="#top">Nach oben</a></p></section></main></body></html>
+<p>Quellinhalt und SHA-256-Werte sind in PACKAGE-CONTENTS.json und SHA256SUMS.txt nachvollziehbar. Private Entwicklungshistorie, Songs, Aufnahmen und Profile werden nicht veröffentlicht. Download-/Versionsbindung und Lizenzen stehen in downloads-manifest.json beziehungsweise <a href="#lizenzen">LIZENZEN.md</a>.</p>
+<h2>Versionsgrenze</h2>
+<p>Die Originalbasis dieser Ausgabe ist fest auf 8c522ee gesetzt. Während der Paketvorbereitung zeigte die lesende Prüfung bereits acht spätere Original-Commits. Diese sind nicht Bestandteil dieser Preview und werden nicht ungeprüft übernommen. Der Updateknopf kann deshalb weitere Änderungen melden.</p><p class="source"><a href="docs/PRUEFSTATUS.md">Textquelle: docs/PRUEFSTATUS.md</a> · <a href="#top">Nach oben</a></p></section></main></body></html>

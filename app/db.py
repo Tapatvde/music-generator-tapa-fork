@@ -3,6 +3,7 @@ import json
 import os
 import sqlite3
 import threading
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -18,7 +19,7 @@ def _engine_conf() -> dict:
     """Vom Installer geschrieben (data/engine.conf): MODE=single|split, LM_FILE=…"""
     conf = {}
     try:
-        for line in (DATA / "engine.conf").read_text().splitlines():
+        for line in (DATA / "engine.conf").read_text(encoding="utf-8-sig").splitlines():
             if "=" in line:
                 k, v = line.split("=", 1)
                 conf[k.strip()] = v.strip()
@@ -28,6 +29,46 @@ def _engine_conf() -> dict:
 
 
 _conf = _engine_conf()
+if _conf.get("LM_DEVICE") == "cpu":
+    _conf["MODE"] = "split"   # Sprachmodell erzwungen auf der CPU (Einstellung oder Installer)
+
+
+def lm_device() -> str:
+    """„cpu“ = Sprachmodell erzwungen auf der CPU, sonst „auto“ (Wert aus data/engine.conf, immer frisch gelesen)."""
+    return "cpu" if _engine_conf().get("LM_DEVICE") == "cpu" else "auto"
+
+
+def set_lm_device(value: str) -> None:
+    """Change only LM_DEVICE, retaining other configuration bytes and using an atomic replacement."""
+    if value not in ('auto', 'cpu'):
+        raise ValueError('Expected auto or cpu.')
+    path = DATA / "engine.conf"
+    try:
+        original = path.read_bytes()
+    except FileNotFoundError:
+        original = b''
+    bom = b'\xef\xbb\xbf' if original.startswith(b'\xef\xbb\xbf') else b''
+    raw = original[len(bom):]
+    newline = b'\r\n' if b'\r\n' in raw else b'\n'
+    lines = [line for line in raw.splitlines(keepends=True) if not line.lstrip().startswith(b'LM_DEVICE=')]
+    updated = b''.join(lines)
+    if value == "cpu":
+        if updated and not updated.endswith((b'\r', b'\n')):
+            updated += newline
+        updated += b'LM_DEVICE=cpu' + newline
+    updated = bom + updated
+    if updated == original:
+        return
+    DATA.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=DATA, prefix='.engine-conf-', delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(updated)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 DEFAULT_SETTINGS = {
     "server_url": "http://127.0.0.1:8087",   # Eigener Fork-Server, startet pro Auftrag

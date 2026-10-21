@@ -746,19 +746,37 @@ def queue():
 
 @app.get("/api/settings")
 def get_settings():
-    return {**db.get_settings(), "songs_dir_default": str(db.SONGS_DIR),
-            'dit_xl_available':(db.MODELS_DIR/DIT_MODELS['xl']).is_file()}
+    return {**db.get_settings(), "lm_device": db.lm_device(), "songs_dir_default": str(db.SONGS_DIR),
+            "dit_xl_available": (db.MODELS_DIR / DIT_MODELS["xl"]).is_file()}
 
 
 @app.put("/api/settings")
 def put_settings(values: dict, x_lang: str = Header("de")):
+    has_lm_device = 'lm_device' in values
+    device = values.pop('lm_device', None)
+    if has_lm_device and (not isinstance(device, str) or device not in ('auto', 'cpu')):
+        raise HTTPException(422, tr(x_lang, 'fork_unknown_lm_device'))
+    for k in ("timeout_minutes", "poll_interval"):   # Zahlen prüfen: ein Textwert würde später jede Erzeugung abbrechen
+        if k in values:
+            try:
+                if isinstance(values[k], bool):
+                    raise ValueError
+                values[k] = float(values[k])
+                if not (0 < values[k] < float("inf")):
+                    raise ValueError
+            except (TypeError, ValueError):
+                raise HTTPException(422, tr(x_lang, "bad_number", field=k))
+            if k == "timeout_minutes" and values[k].is_integer():
+                values[k] = int(values[k])
     if 'dit' in values:
         if not isinstance(values['dit'],str) or values['dit'] not in DIT_MODELS:raise HTTPException(422,tr(x_lang,'fork_unknown_model'))
         if values['dit']=='xl' and not (db.MODELS_DIR/DIT_MODELS['xl']).is_file():
             raise HTTPException(400,tr(x_lang,'xl_missing'))
     if "songs_dir" in values:
         values["songs_dir"] = _move_songs(str(values["songs_dir"] or "").strip(), x_lang)
-    return db.save_settings(values)
+    if has_lm_device:
+        db.set_lm_device(device)
+    return {**db.save_settings(values), 'lm_device':db.lm_device()}
 
 
 def _move_songs(new: str, lang: str) -> str:
@@ -816,8 +834,14 @@ async def analyze(audio: UploadFile, x_lang: str = Header("de")):
 
 @app.post("/api/shutdown")
 async def shutdown(x_lang: str = Header()):   # Pflicht-Header: fremde Webseiten können ihn nicht mitschicken
-    """Führt „Music Generator OFF“ aus: beendet Web-App und Modellserver, schließt die Browser-Tabs."""
-    name = "scripts/fork-control.ps1" if sys.platform == "win32" else "Music Generator OFF.command"
+    if sys.platform == "win32":
+        name = "scripts/fork-control.ps1"
+    elif sys.platform == "darwin":
+        name = "Music Generator OFF.command"
+    elif (db.ROOT / "Music Generator OFF.sh").is_file():
+        name = "Music Generator OFF.sh"
+    else:
+        name = "Music Generator OFF.command"
     script = db.ROOT / name
     if not script.is_file():
         raise HTTPException(404, tr(x_lang, "script_missing", name=name))

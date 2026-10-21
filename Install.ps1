@@ -3,9 +3,11 @@
 param([switch]$Yes,[ValidateSet('0.6B','1.7B','4B')][string]$LM='1.7B',
       [switch]$XL,[switch]$MusicOnly,[switch]$Alignment,[switch]$AcceptNonCommercialLicense,
       [switch]$NoStart,[switch]$PlanOnly,[switch]$SkipGpuCheck,[switch]$NoNetwork,
-      [string]$AssetCache='', [string]$WheelCache='')
+      [string]$AssetCache='', [string]$WheelCache='', [switch]$Cpu, [switch]$Auto)
 $ErrorActionPreference='Stop'
+if ($Cpu -and $Auto) { throw 'Choose either -Cpu or -Auto, not both.' }
 . (Join-Path $PSScriptRoot 'scripts\installer-common.ps1')
+. (Join-Path $PSScriptRoot 'scripts\configure-device.ps1')
 Set-Location -LiteralPath $installRoot
 [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
 $manifest=Get-Content -LiteralPath (Join-Path $installRoot 'downloads-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -34,7 +36,8 @@ $models=@($manifest.models | Where-Object {
 })
 $assets=@($manifest.assets)
 [long]$downloadBytes=0;foreach ($entry in @($assets)+@($models)) { $downloadBytes += [long]$entry.bytes }
-$plan=[ordered]@{folder=$installRoot;language_model=$LM;sound_model=$(if($XL){'standard + XL'}else{'standard'});voice_training=(-not $MusicOnly);noncommercial_aligner=[bool]$Alignment;listed_download_GB=[math]::Round($downloadBytes/1e9,2);python_packages='Additional; see requirements/app.lock and rvc.lock';disk_recommendation_GB=$(if($MusicOnly){20}else{35})+[int]([bool]$XL)*6}
+$deviceChoice=Get-ForkLmDevice -Path (Join-Path $installRoot 'data\engine.conf') -Cpu:$Cpu -Auto:$Auto
+$plan=[ordered]@{folder=$installRoot;language_model=$LM;language_model_device=$deviceChoice;sound_model=$(if($XL){'standard + XL'}else{'standard'});voice_training=(-not $MusicOnly);noncommercial_aligner=[bool]$Alignment;listed_download_GB=[math]::Round($downloadBytes/1e9,2);python_packages='Additional; see requirements/app.lock and rvc.lock';disk_recommendation_GB=$(if($MusicOnly){20}else{35})+[int]([bool]$XL)*6}
 if ($PlanOnly) { $plan | ConvertTo-Json;exit 0 }
 if (-not [Environment]::Is64BitOperatingSystem) { throw '64-bit Windows is required.' }
 $packageInfo=Get-Content -LiteralPath (Join-Path $installRoot 'fork-info.json') -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -92,7 +95,18 @@ try {
     if ((Get-InstallHash $python) -ne $pythonEntry.executable_sha256) { throw 'The local Python executable differs from the verified runtime. It was not executed.' }
     $env:PATH=(Split-Path -Parent $python)+[IO.Path]::PathSeparator+$env:PATH
     if (-not $SkipGpuCheck) { Invoke-Checked $python @((Join-Path $installRoot 'scripts\check-driver.py')) }
-    foreach ($entry in $assets | Where-Object id -Like 'ace-*') { Install-VerifiedFile $entry }
+    # The original's pinned engine archive is checked before extraction and installed with rollback.
+    $runtime=$assets | Where-Object id -eq 'ace-runtime'
+    $ROOT=$installRoot; $DATA=Join-Path $installRoot 'data'; $ENGINE=Join-Path $installRoot 'engine\acestep.cpp'
+    $ENGINE_WIN_REV=$runtime.revision; $ENGINE_WIN_URL=$runtime.url; $ENGINE_WIN_SHA256=$runtime.sha256
+    function Port-Laeuft([int]$Number) { return [bool](Get-NetTCPConnection -State Listen -LocalPort $Number -ErrorAction SilentlyContinue) }
+    function Download([string]$Url,[string]$Destination) {
+        if ($Url -ne $runtime.url) { throw 'Unexpected native download source.' }
+        Copy-Item -LiteralPath (Get-VerifiedAsset $runtime) -Destination $Destination
+        return $true
+    }
+    . (Join-Path $installRoot 'scripts\install-ace-runtime.ps1')
+    Install-AceRuntime
     foreach ($entry in $assets | Where-Object native_library -eq $true) {
         $archive=Get-VerifiedAsset $entry
         Invoke-Checked $python @((Join-Path $installRoot 'scripts\extract-native-libraries.py'),$archive,(Join-Path $installRoot 'engine\acestep.cpp\build\Release'),$entry.id)
@@ -124,7 +138,7 @@ try {
             Invoke-Checked $python @((Join-Path $installRoot 'scripts\extract-mute.py'),(Join-Path $installRoot $entry.target),(Join-Path $installRoot 'engine\rvc\logs'))
         }
     }
-    @('MODE=single',"LM_FILE=acestep-5Hz-lm-$LM-Q8_0.gguf",'VAE_CHUNK=256') | Set-Content -LiteralPath (Join-Path $installRoot 'data\engine.conf') -Encoding ASCII
+    Write-ForkEngineConfig -Path (Join-Path $installRoot 'data\engine.conf') -LmFile "acestep-5Hz-lm-$LM-Q8_0.gguf" -Cpu:$Cpu -Auto:$Auto
     Invoke-Checked $appPython @((Join-Path $installRoot 'scripts\finish-install.py'),$(if($XL){'xl'}else{'standard'}))
     if (-not $MusicOnly) {
         . (Join-Path $installRoot 'scripts\rvc-environment.ps1')

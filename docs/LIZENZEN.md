@@ -1,10 +1,10 @@
 # Code, Modelle und Werkzeuge haben getrennte Lizenzen
 
-Stand 13.10.2026. Diese Übersicht dokumentiert Herkunft und Bedingungen; sie ist keine pauschale kommerzielle Freigabe sämtlicher Komponenten oder erzeugter Musik. Die maßgeblichen Originaltexte sind verlinkt und werden, soweit in Archiven enthalten, lokal mit heruntergeladen.
+Stand 21.10.2026. Diese Übersicht dokumentiert Herkunft und Bedingungen; sie ist keine pauschale kommerzielle Freigabe sämtlicher Komponenten oder erzeugter Musik. Die maßgeblichen Originaltexte sind verlinkt und werden, soweit in Archiven enthalten, lokal mit heruntergeladen.
 
 | Bestandteil | Quelle | Angegebene Lizenz / Besonderheit |
 |---|---|---|
-| Music Generator | [Original-LICENSE](https://github.com/rabbitfiremediacreation/music-generator/blob/3681b03fe4a91886413f87577ac94e4c2b583416/LICENSE) | MIT, Copyright ALPHATESTER bleibt enthalten |
+| Music Generator | [Original-LICENSE](https://github.com/rabbitfiremediacreation/music-generator/blob/8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8/LICENSE) | MIT, Copyright ALPHATESTER bleibt enthalten |
 | wavesurfer.js | [Projektlizenz](https://github.com/katspaugh/wavesurfer.js/blob/main/LICENSE), mitgelieferte static/vendor/wavesurfer-LICENSE.txt | BSD-3-Clause; separat vom MIT-Forkcode |
 | Eigene Fork-Anpassungen | LICENSE dieses Ordners | MIT; keine Umlizenzierung anderer Komponenten |
 | RVC-Quellcode | [RVC-LICENSE](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI/blob/81eed5e8f68b6bed1789f682fe78cdd324495afc/LICENSE) | MIT; Quelle und Änderungen als Patch nachvollziehbar |

@@ -13,13 +13,21 @@ const api = async (path, opts = {}) => {
 };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fmt = (sec) => (isFinite(sec) ? `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}` : "");
+// Ansage für Screenreader (VoiceOver, NVDA …): unsichtbare Statuszeile; urgent = sofort, unterbricht (Fehler)
+function announce(text, urgent = false) {
+  const el = $(urgent ? "#srAlert" : "#srStatus");
+  el.textContent = "";
+  setTimeout(() => { el.textContent = text; }, 50);   // erst leeren, damit gleiche Texte erneut angesagt werden
+  clearTimeout(el._t); el._t = setTimeout(() => { el.textContent = ""; }, 8000);   // nicht beim späteren Durchblättern erneut vorlesen
+}
 
 // Stil-Karten, nach Art gruppiert; der Würfel mischt daraus einen Stil
 const STYLE_GROUPS = {
   genre: ["trip hop", "downtempo", "dub", "deep house", "techno", "drum and bass", "post-rock", "neo-soul", "dark ambient", "boom bap", "orchestral",
-    "pop", "rock", "hip hop", "electronic", "lo-fi", "jazz", "ambient", "synthwave", "acoustic", "cinematic"],
+    "pop", "rock", "hip hop", "electronic", "lo-fi", "jazz", "ambient", "synthwave", "acoustic", "cinematic",
+    "country", "80s pop", "eurotrash", "90s dance", "chillout"],
   vocals: ["female vocals", "male vocals"],
-  instr: ["piano", "guitar", "808 bass"],
+  instr: ["piano", "guitar"],
   mood: ["upbeat", "melancholic", "dreamy"],
 };
 const STYLE_TAGS = [...STYLE_GROUPS.genre, ...STYLE_GROUPS.vocals, ...STYLE_GROUPS.instr, ...STYLE_GROUPS.mood];
@@ -41,24 +49,77 @@ try { played = new Set(JSON.parse(localStorage.getItem("played") || "[]")); } ca
 const markPlayed = (id) => { played.add(id); try { localStorage.setItem("played", JSON.stringify([...played])); } catch {} };
 const genTime = (s) => { const t = s.result_meta?.elapsed_seconds ?? s.result_meta?.generation_seconds ?? (Date.parse(s.finished_at) - Date.parse(s.created_at)) / 1000; return isFinite(t) && t >= 0 ? fmt(t) : null; };
 
-// Würfel: zufälliger Prompt (Stimmung, Szene, Detail); der Stil bleibt deine Wahl
+// Würfel: zufälliger Prompt. Sechs Bauformen von kurz bis lang, gespeist aus Stimmungen, Szenen, Besetzungen,
+// Produktion, Verlauf und ganzen Ideen; Gesang nur, wenn der Song nicht instrumental ist. Der Stil bleibt deine Wahl.
 const R = {
-  mood: ["dark", "dreamy", "melancholic", "hypnotic", "warm", "tense", "nostalgic", "euphoric", "lonely", "mysterious", "hopeful", "gritty", "serene", "haunting"],
+  mood: ["dark", "dreamy", "melancholic", "hypnotic", "warm", "tense", "nostalgic", "euphoric", "lonely", "mysterious", "hopeful", "gritty",
+    "serene", "haunting", "playful", "triumphant", "bittersweet", "restless", "tender", "icy", "sun-drenched", "menacing", "weightless", "feverish",
+    "majestic", "wistful", "cheeky", "solemn", "glowing", "ghostly"],
   scene: ["a late night drive through a neon city", "a rainy afternoon in an empty café", "walking through fog at dawn", "an abandoned space station",
     "a quiet forest after snowfall", "a crowded market at sunset", "floating above the clouds", "a smoky club after midnight", "a desert road at sunrise",
-    "an old arcade at closing time", "a lighthouse during a storm", "the last train home", "a rooftop above a sleeping city", "an underwater research lab"],
-  detail: ["slow and spacious", "building gradually", "with a steady pulse", "sparse and minimal", "with swelling strings", "slightly dusty and worn",
-    "with a soft melodic hook", "with a hypnotic repeating motif", "with deep warm bass", "with distant echoing textures"],
+    "an old arcade at closing time", "a lighthouse during a storm", "the last train home", "a rooftop above a sleeping city", "an underwater research lab",
+    "a ballroom after the guests have left", "a carnival packing up at dawn", "a cathedral filled with candlelight", "a slow river at golden hour",
+    "a highway at 3 a.m. with the windows down", "a childhood bedroom found years later", "a spaceship drifting past Jupiter", "a wedding in a thunderstorm",
+    "a boxing gym before the big fight", "a lonely gas station in the snow", "a parade marching through a ghost town", "a greenhouse humming with bees",
+    "a submarine running silent", "a rooftop garden in the rain", "a film noir stakeout", "a summer fair at twilight", "the first morning after a breakup",
+    "a mountain village waking up", "a chase across the rooftops of an old city", "a cold war radio station at night", "a jazz bar on a cruise ship",
+    "a library where the books whisper", "the final lap of a race", "a long goodbye at an airport", "a campfire by a black lake", "a robot learning to dance"],
+  band: ["a full symphony orchestra", "a string quartet", "solo piano", "a brass band", "a lone acoustic guitar", "a big band with screaming horns",
+    "a church organ", "a chamber choir", "vintage analog synthesizers", "a drum machine and a single bass line", "a mariachi ensemble", "a gospel choir and Hammond organ",
+    "a harp and distant woodwinds", "marching drums and a trumpet", "a jazz trio late in the set", "a wall of distorted guitars", "a music box and cello",
+    "steel drums and upright bass", "a bluegrass band on a porch", "a lone trumpet over sparse piano", "pipe organ and timpani", "a ukulele and whistling",
+    "a tango orchestra", "a string section and a ticking drum machine", "an accordion and a double bass", "a 90s rave rig", "a bedroom producer with a cheap sampler",
+    "a children's choir and glockenspiel", "an 80s synth-pop setup with gated drums", "a lo-fi cassette four-track"],
+  production: ["recorded live in one take", "lo-fi and dusty", "polished and radio-ready", "wide and cinematic", "dry and intimate", "drenched in reverb",
+    "crisp and modern", "warm tape saturation", "slightly out of tune on purpose", "huge stadium sound", "crackling like an old record", "crystal clear and spacious",
+    "raw garage recording", "glossy 80s production", "muffled as if heard through a wall"],
+  arc: ["building gradually to a huge finale", "starting almost silent", "with a sudden drop in the middle", "quiet verses and an explosive chorus",
+    "slowly falling apart at the end", "with a false ending", "steady from the first second to the last", "with a long atmospheric intro",
+    "breaking down to a single instrument halfway", "ending on an unresolved chord", "getting faster and faster", "like a dream that keeps changing shape",
+    "with a breakdown that feels like holding your breath", "circling the same idea until it transforms"],
+  detail: ["slow and spacious", "with a steady pulse", "sparse and minimal", "with swelling strings", "with a soft melodic hook", "with a hypnotic repeating motif",
+    "with deep warm bass", "with distant echoing textures", "with a syncopated groove", "with a bright, singable melody", "with odd time signatures",
+    "with handclaps and stomps", "with a driving half-time beat", "with shimmering arpeggios", "with a wordless hum in the background", "with a melody that aches",
+    "with playful call and response", "with a bass line that never stops moving", "with silence used as an instrument", "with a riff you can't shake"],
+  vocals: ["sung by a raspy male voice", "with a soft female lead", "with layered harmonies", "with a choir answering the lead", "half spoken, half sung",
+    "with a powerful belting vocal", "whispered close to the mic", "with a lazy, laid-back delivery", "with a soulful ad-lib at the end", "a duet between two voices"],
+  idea: ["a sea shanty sung on a spaceship", "a tango for two robots", "a lullaby for a thunderstorm", "a marching band in slow motion", "a love song to a city that doesn't exist",
+    "a western theme for a dusty planet", "a waltz for the last day of summer", "a funeral march that turns into a party", "a video game boss fight as an opera",
+    "a disco track for ghosts", "a hymn for a lighthouse keeper", "a jingle for a shop that sells time", "a spy theme set in a rainforest", "a cowboy lost in Tokyo",
+    "a tiny orchestra inside a music box", "a victory anthem for a losing team", "a dance track for a thunder god", "a lullaby a robot sings to itself",
+    "a chase scene scored by a string quartet", "a sad song that pretends to be happy", "the national anthem of a country made of clouds", "a monk discovering techno",
+    "a pirate ballad about missing home", "a late-night infomercial from the future", "a bedtime story for a dragon", "the sound of a train station remembering everyone",
+    "a surf rock song about the moon", "an opera about a lost sock", "a reggae song for a snowstorm", "a baroque fugue played by a jazz trio"],
 };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
-const randomPrompt = () => `${pick(R.mood)}, ${pick(R.scene)}, ${pick(R.detail)}`;
+const cap = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+const randomPrompt = () => {
+  const vox = !form.instrumental.checked && Math.random() < 0.4 ? pick(R.vocals) : "";
+  const forms = [
+    () => pick(R.idea),                                                           // ganze Idee, kurz
+    () => `${pick(R.mood)} ${pick(R.band)}, ${pick(R.scene)}`,                     // Stimmung + Besetzung + Szene
+    () => `${pick(R.mood)}, ${pick(R.scene)}, ${pick(R.detail)}`,                  // klassisch
+    () => `${pick(R.idea)}, ${pick(R.production)}, ${pick(R.arc)}`,                // Idee ausgebaut
+    () => `${pick(R.band)} playing something ${pick(R.mood)} and ${pick(R.mood)}, ${pick(R.detail)}, ${pick(R.production)}`,
+    () => `${pick(R.scene)}: ${pick(R.band)}, ${pick(R.mood)} and ${pick(R.mood)}, ${pick(R.detail)}, ${pick(R.production)}, ${pick(R.arc)}`,   // lang
+  ];
+  let text = pick(forms)();
+  text = text.replace(/\b(\w+) and \1\b/, "$1");   // zweimal dieselbe Stimmung vermeiden
+  return cap(vox ? `${text}, ${vox}` : text);
+};
 
 // ---------------------------------------------------------------- Formular
 const form = $("#genForm");
 function addChips(el, items, onClick) {
-  el.innerHTML = items.map((t) => `<span class="chip">${esc(t)}</span>`).join("");
+  el.innerHTML = items.map((t) => `<span class="chip" role="button" tabindex="0">${esc(t)}</span>`).join("");
   el.querySelectorAll(".chip").forEach((c, i) => c.addEventListener("click", () => onClick(items[i])));
 }
+// Karten sind Schaltflächen: mit Tab erreichbar, Enter und Leertaste lösen einen Klick aus
+document.addEventListener("keydown", (e) => {
+  const c = e.target.closest?.('[role="button"]');
+  if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); c.click(); }
+});
+
 // Stil-Karten sind Schalter: an = steht im Stil-Feld (gold umrandet), aus = wird dort wieder entfernt
 const styleParts = () => form.style.value.split(",").map((x) => x.trim()).filter(Boolean);
 function syncStyleChips() {
@@ -89,6 +150,8 @@ function updateSlider(box) {
   const out = SLIDER_FMT[box.dataset.fmt](v, min), span = box.querySelector(".knob span");
   span.textContent = Array.isArray(out) ? out[0] : out;
   span.classList.toggle("small", Array.isArray(out));
+  inp.setAttribute("aria-valuetext", box.dataset.fmt === "dur" ? t("vt_dur", Math.floor(v / 60), v % 60)
+    : box.dataset.fmt === "bpm" ? (v <= min ? t("vt_auto") : `${v} BPM`) : span.textContent);
   if (inp.name === "variants") $("#genBtn").textContent = v > 1 ? t("generate_n", v) : t("generate");
 }
 const showDur = () => document.querySelectorAll(".slider").forEach(updateSlider);
@@ -111,16 +174,17 @@ const TITLE = {
   adj: ["Midnight", "Velvet", "Neon", "Silent", "Golden", "Hollow", "Electric", "Faded", "Distant", "Crimson", "Slow", "Lunar", "Paper", "Glass", "Amber"],
   noun: ["Static", "Horizon", "Rain", "Echoes", "Signal", "Drift", "Skyline", "Mirror", "Ember", "Tide", "Orbit", "Harbor", "Afterglow", "Motel", "Garden"],
 };
-// ein bis zwei Genres, ein Instrument, eine Stimmung; Gesang nur, wenn der Song nicht instrumental ist
+// Ein Genre, dazu null bis zwei weitere Begriffe (zweites Genre, Instrument, Stimmung, bei Gesang auch Stimme):
+// höchstens drei Begriffe, gern auch nur einer
 const randomStyle = () => {
-  const parts = [pick(STYLE_GROUPS.genre)];
-  if (Math.random() < 0.6) {
-    let second;
-    do second = pick(STYLE_GROUPS.genre); while (second === parts[0]);
-    parts.push(second);
-  }
-  parts.push(pick(STYLE_GROUPS.instr), pick(STYLE_GROUPS.mood));
-  if (!form.instrumental.checked) parts.push(pick(STYLE_GROUPS.vocals));
+  const genre = pick(STYLE_GROUPS.genre);
+  let second;
+  do second = pick(STYLE_GROUPS.genre); while (second === genre);
+  const pool = [second, pick(STYLE_GROUPS.instr), pick(STYLE_GROUPS.mood)];
+  if (!form.instrumental.checked) pool.push(pick(STYLE_GROUPS.vocals));
+  const extra = Math.floor(Math.random() * 3);   // 0, 1 oder 2
+  const parts = [genre];
+  for (let i = 0; i < extra; i++) parts.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
   return parts.join(", ");
 };
 const randomTitle = () => `${pick(TITLE.adj)} ${pick(TITLE.noun)}`;
@@ -138,6 +202,10 @@ lyricsDice.addEventListener("click", (e) => {
   form.instrumental.checked = false; lyricsStash = ""; form.lyrics.value = "";
   syncLyrics();
   rollAnim(e.currentTarget);
+});
+// Einklappen der Lyrics (Klick auf die Kopfzeile) heißt: Instrumental. Der Würfel in der Kopfzeile ist ausgenommen (stoppt oben).
+$("#lyricsBox > summary").addEventListener("click", () => {
+  if ($("#lyricsBox").open && !form.instrumental.checked) { form.instrumental.checked = true; syncLyrics(); }
 });
 form.instrumental.addEventListener("change", () => { syncLyrics(); if (!form.instrumental.checked) $("#lyricsBox").open = true; });
 form.lyrics.addEventListener("focus", () => { if (form.instrumental.checked) { form.instrumental.checked = false; syncLyrics(); } });
@@ -163,9 +231,11 @@ form.addEventListener("submit", async (e) => {
   if (!form.prompt.value.trim() && !form.style.value.trim()) { form.prompt.focus(); return; }
   const btn = $("#genBtn");
   if (btn.disabled) return;
+  btn.classList.remove("fired"); void btn.offsetWidth; btn.classList.add("fired");   // Animation auch bei Enter/Alt+G
   btn.disabled = true;
   try {
-    await api("/api/generate", { method: "POST", body: JSON.stringify(readForm()) });
+    const r = await api("/api/generate", { method: "POST", body: JSON.stringify(readForm()) });
+    announce(t("an_queued", r.ids.length));
     refresh();
   } catch (err) { alert(t("error") + ": " + err.message); }
   setTimeout(() => { btn.disabled = false; }, 600);
@@ -215,40 +285,251 @@ function dzState(cls, text) {
   bubble.classList.toggle("show", !!text);
   if (cls === "ok") dzHideTimer = setTimeout(() => { dz.className = "logo-wrap"; bubble.classList.remove("show"); }, 4000);
 }
-async function analyzeFile(file) {
+// Stilbegriffe aus der Beschreibung der Analyse ziehen: [Tag, Muster, Art]. Art "v" = Stimme (nur bei Songs mit Gesang).
+// Die Tags heißen wie die Stil-Karten, damit diese aufleuchten. Weitere Begriffe stehen einfach im Stil-Feld.
+const STYLE_VOCAB = [
+  ["hip hop", "hip ?hop"], ["rap", "\\brap(?:per|ping)?\\b", "v"], ["boom bap", "boom ?bap"], ["trap", "\\btrap\\b"], ["lo-fi", "lo ?fi"],
+  ["trip hop", "trip ?hop"], ["downtempo", "downtempo"], ["dub", "\\bdub\\b"], ["dubstep", "dubstep"],
+  ["deep house", "deep house"], ["house", "\\bhouse (?:music|track|beat|groove|vibe|style|rhythm)\\b|\\b(?:tech|progressive|acid|funky|french|chicago|piano) house\\b"],
+  ["techno", "techno"], ["trance", "\\btrance\\b"], ["drum and bass", "drum ?(?:and|&|n) ?bass|\\bdnb\\b|\\bjungle\\b"],
+  ["breakbeat", "break ?beat"], ["garage", "uk garage|2 step|garage (?:beat|track)"], ["electro", "\\belectro\\b"], ["electronic", "electronic|\\bedm\\b"],
+  ["synthwave", "synthwave|retrowave|outrun"], ["synthpop", "synth ?pop"], ["new wave", "new wave"],
+  ["disco", "disco"], ["funk", "\\bfunk(?:y)?\\b"], ["soul", "\\bsoul(?:ful)?\\b"], ["neo-soul", "neo ?soul"], ["r&b", "\\br ?(?:&|and|n) ?b\\b|rhythm and blues"],
+  ["gospel", "gospel"], ["jazz", "\\bjazz(?:y)?\\b"], ["blues", "\\bblues\\b"], ["rock", "\\brock\\b"], ["post-rock", "post ?rock"], ["hard rock", "hard rock"],
+  ["punk", "\\bpunk\\b"], ["metal", "heavy metal|\\bmetal (?:music|track|riffs?|guitars?|band)\\b"], ["grunge", "grunge"], ["indie", "\\bindie\\b"],
+  ["shoegaze", "shoegaze"], ["pop", "\\bpop\\b"], ["folk", "\\bfolk\\b"], ["country", "country (?:music|ballad|song|track|guitar)"],
+  ["80s pop", "(?:80s|eighties|1980s) pop"], ["eurotrash", "euro ?trash|euro ?dance"], ["90s dance", "(?:90s|nineties|1990s) dance"], ["chillout", "chill ?out"],
+  ["reggae", "reggae"], ["ska", "\\bska\\b"], ["reggaeton", "reggaeton"], ["afrobeat", "afro ?beats?"], ["latin", "\\blatin\\b|salsa|bossa ?nova|samba|cumbia"],
+  ["orchestral", "orchestra"], ["cinematic", "cinematic|film score|soundtrack"], ["classical", "classical"],
+  ["ambient", "\\bambient\\b"], ["dark ambient", "dark ambient"], ["acoustic", "acoustic"], ["chill", "chillhop|\\bchill\\b(?! ?out)"],
+  ["piano", "\\bpiano\\b"], ["electric piano", "electric piano|rhodes|wurlitzer"], ["organ", "\\borgan\\b|hammond"], ["synth", "\\bsynth(?:esizers?|s)?\\b"],
+  ["guitar", "guitar"], ["funk guitar", "funk(?:y)? guitar|wah ?wah|chicken scratch"], ["slap bass", "slap bass"], ["808 bass", "\\b808\\b"], ["bass", "\\bbass(?:line)?\\b"],
+  ["drums", "\\bdrums?\\b|drum (?:break|machine|beat)"], ["strings", "\\bstrings?\\b|violin|cello"], ["brass", "\\bbrass\\b|\\bhorns?\\b|trumpet|trombone"],
+  ["saxophone", "\\bsax(?:ophone)?\\b"], ["flute", "flute"], ["harp", "\\bharp\\b"], ["clavinet", "clavinet"], ["vinyl crackle", "vinyl|crackle"],
+  ["turntable scratches", "scratch(?:es|ing)?\\b|turntable"], ["choir", "choir|choral"], ["vocoder", "vocoder|talk ?box"],
+  ["male vocals", "\\bmale (?:vocals?|singer|voice|rapper|lead)\\b", "v"], ["female vocals", "\\bfemale (?:vocals?|singer|voice|rapper|lead)\\b", "v"], ["falsetto", "falsetto", "v"],
+  ["upbeat", "upbeat|energetic|uplifting"], ["melancholic", "melancholi[cy]"], ["dreamy", "dreamy|ethereal"], ["dark", "\\bdark\\b"],
+  ["groovy", "\\bgroov(?:y|e)\\b"], ["mellow", "mellow|laid ?back|relaxed"], ["gritty", "gritty|\\braw\\b"],
+].map(([tag, re, kind]) => ({ tag, re: new RegExp(re, "g"), vocal: kind === "v" }));
+
+// Reihenfolge der Plätze: Genre, Stimme, Instrument, Stimmung. Innerhalb davon in der Reihenfolge des Textes.
+const TAG_VOICE = new Set(["rap", "male vocals", "female vocals", "falsetto"]);
+const TAG_MOOD = new Set(["upbeat", "melancholic", "dreamy", "dark", "groovy", "mellow", "gritty"]);
+const TAG_INSTR = new Set(["piano", "electric piano", "organ", "synth", "guitar", "funk guitar", "slap bass", "808 bass", "bass", "drums", "strings", "brass",
+  "saxophone", "flute", "harp", "clavinet", "vinyl crackle", "turntable scratches", "choir", "vocoder"]);
+const tagRank = (tag) => (TAG_VOICE.has(tag) ? 1 : TAG_INSTR.has(tag) ? 2 : TAG_MOOD.has(tag) ? 3 : 0);
+
+function extractStyleTags(text, hasVocals, max = 6) {
+  const t = String(text || "").toLowerCase().replace(/[-_/]/g, " ");
+  const hits = [];
+  for (const v of STYLE_VOCAB) {
+    if (v.vocal && !hasVocals) continue;
+    v.re.lastIndex = 0;
+    const m = v.re.exec(t);
+    if (m) hits.push({ tag: v.tag, start: m.index });
+  }
+  // allgemeiner Begriff entfällt, wenn ein genauerer da ist: "deep house" statt auch "house", "808 bass" statt auch "bass"
+  const keep = hits.filter((h) => !hits.some((o) => o.tag !== h.tag && (o.tag.endsWith(" " + h.tag) || o.tag.endsWith("-" + h.tag))));
+  return keep.sort((a, b) => tagRank(a.tag) - tagRank(b.tag) || a.start - b.start).slice(0, max).map((h) => h.tag);
+}
+
+async function analyzeFile(file, idea = null) {   // idea = Messwerte einer Mikrofon-Aufnahme (measureMelody)
   if (!file) return;
   dzState("busy", t("analyzing", file.name));
   const body = new FormData(); body.append("audio", file);
   try {
     const r = await api("/api/analyze", { method: "POST", body });
-    form.prompt.value = r.caption || "";
-    form.style.value = ""; syncStyleChips();
-    form.title.value = randomTitle();
+    form.prompt.value = idea ? describeIdea(idea, r.caption, r.keyscale) : r.caption || "";
+    if (!idea) {
+      form.title.value = randomTitle();
    
-    // Nur echter Text außerhalb von [Strukturmarkern] zählt als Gesang — sonst schreibt das
-    // Modell manchmal Dinge wie "[Acoustic guitar intro]" gefolgt von "[Instrumental]".
-    const hasVocals = (r.lyrics || "").replace(/\[[^\]]*\]/g, "").trim().length > 0;
-    if (hasVocals) {
-      // Song hat Gesang: nicht den transkribierten Text übernehmen, sondern wie beim Lyrics-Würfel
-      // das Modell bei der Generierung selbst welche schreiben lassen (Prompt ist ja gerade gesetzt).
-      form.instrumental.checked = false; lyricsStash = ""; form.lyrics.value = "";
-      $("#lyricsBox").open = true;
-      const lang = (r.vocal_language || "").toLowerCase();
-      if ([...form.vocal_language.options].some(o => o.value === lang)) form.vocal_language.value = lang;
-    } else { form.instrumental.checked = true; }
-    syncLyrics();
+      // Nur echter Text außerhalb von [Strukturmarkern] zählt als Gesang — sonst schreibt das
+      // Modell manchmal Dinge wie "[Acoustic guitar intro]" gefolgt von "[Instrumental]".
+      const hasVocals = (r.lyrics || "").replace(/\[[^\]]*\]/g, "").trim().length > 0;
+      if (hasVocals) {
+        // Song hat Gesang: nicht den transkribierten Text übernehmen, sondern wie beim Lyrics-Würfel
+        // das Modell bei der Generierung selbst welche schreiben lassen (Prompt ist ja gerade gesetzt).
+        form.instrumental.checked = false; lyricsStash = ""; form.lyrics.value = "";
+        $("#lyricsBox").open = true;
+        const lang = (r.vocal_language || "").toLowerCase();
+        if ([...form.vocal_language.options].some(o => o.value === lang)) form.vocal_language.value = lang;
+      } else { form.instrumental.checked = true; }
+      syncLyrics();
+      // Stil: Begriffe aus der Beschreibung ergänzen; was schon im Stil-Feld steht, bleibt
+      const have = styleParts(), low = new Set(have.map((x) => x.toLowerCase()));
+      const add = extractStyleTags(r.caption, hasVocals).filter((x) => !low.has(x.toLowerCase()));   // bei Ideen rät die Analyse das Instrument falsch
+      form.style.value = [...have, ...add].join(", "); syncStyleChips();
+    }
     if (r.bpm) { form.bpm.value = r.bpm; }
-    if (r.duration) form.duration.value = Math.min(+form.duration.max, Math.max(+form.duration.min, Math.round(r.duration / 5) * 5));
+    if (r.duration && !idea) form.duration.value = Math.min(+form.duration.max, Math.max(+form.duration.min, Math.round(r.duration / 5) * 5));
     showDur();
     setSelect(form.keyscale, r.keyscale, true);
     setSelect(form.timesignature, String(r.timesignature || ""));
-    dzState("ok", t("analyzed", file.name));
+    dzState("ok", idea ? t("idea_ready") : t("analyzed", file.name));
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (err) {
     dzState("err", `${t("error")}: ${err.message}`);
   }
 }
 dz.addEventListener("click", () => fileInput.click());
+
+// ---------------------------------------------------------------- Ideengeber (Aufnahme vom Mikrofon)
+// Knopf im Kopf: gedrückt halten = aufnehmen (Maus, Finger oder Leertaste), 5 bis REC_MAX Sekunden.
+// Die Aufnahme geht als WAV durch dieselbe Analyse wie ein hochgeladener Song: Beschreibung, Tempo, Tonart, Takt
+// kommen ins Simple-Formular; Titel, Text, Stil und Länge bleiben unverändert. In diesem Ideenmodus
+// wird die Aufnahme nicht als Melodievorlage weitergegeben; für Audiovorlagen gibt es den Deep Mode.
+const REC_MAX = 30, REC_MIN = 5;
+// Die Analyse des Modells kennt nur fertige Songs und hält Summen für Glockenspiel oder Synthesizer (getestet Okt. 2026).
+// Deshalb beschreiben wir eine Mikrofon-Idee selbst aus Messungen: Tonhöhenverlauf (YIN), Tempo der Töne, Bindung.
+// Vom Modell übernehmen wir nur Stimmungswörter, dazu Tempo und Tonart; den Stil wählt der Nutzer.
+function measureMelody(mono, rate) {
+  const step = Math.max(1, Math.round(rate / 16000)), sr = rate / step;      // auf etwa 16 kHz herunter
+  const x = new Float32Array(Math.floor(mono.length / step));
+  for (let i = 0; i < x.length; i++) { let a = 0; for (let k = 0; k < step; k++) a += mono[i * step + k]; x[i] = a / step; }
+  const W = 1024, H = 256, tauMin = Math.floor(sr / 2500), tauMax = Math.ceil(sr / 70);   // 70 Hz (tiefe Stimme) bis 2,5 kHz (Pfeifen)
+  let peak = 0; for (const v of x) peak = Math.max(peak, Math.abs(v));
+  const frames = [], d = new Float32Array(tauMax + 1);
+  for (let start = 0; start + W + tauMax < x.length; start += H) {
+    let e = 0; for (let i = 0; i < W; i++) e += x[start + i] ** 2;
+    const rms = Math.sqrt(e / W);
+    let pitch = null;
+    if (rms > peak * 0.04) {
+      let run = 0;
+      for (let tau = 1; tau <= tauMax; tau++) {
+        let sum = 0; for (let i = 0; i < W; i++) { const df = x[start + i] - x[start + i + tau]; sum += df * df; }
+        run += sum; d[tau] = run ? (sum * tau) / run : 1;            // kumulierte mittlere normierte Differenz
+      }
+      for (let tau = tauMin; tau < tauMax; tau++) {
+        if (d[tau] < 0.15) { while (tau + 1 < tauMax && d[tau + 1] < d[tau]) tau++; pitch = 69 + 12 * Math.log2(sr / tau / 440); break; }
+      }
+    }
+    frames.push({ t: start / sr, rms, pitch, loud: rms > peak * 0.04 });
+  }
+  const voiced = frames.filter((f) => f.pitch !== null);
+  if (voiced.length < 10) return null;
+  const ps = voiced.map((f) => f.pitch).sort((a, b) => a - b), q = (p) => ps[Math.floor(p * (ps.length - 1))];
+  // Tonwechsel: Sprung um mehr als einen Dreiviertelton gegenüber der laufenden Note
+  let notes = 1, cur = voiced[0].pitch;
+  for (const f of voiced) if (Math.abs(f.pitch - cur) > 0.75) { notes++; cur = f.pitch; }
+  const n = voiced.length, mt = voiced.reduce((a, f) => a + f.t, 0) / n, mp = voiced.reduce((a, f) => a + f.pitch, 0) / n;
+  const slope = voiced.reduce((a, f) => a + (f.t - mt) * (f.pitch - mp), 0) / Math.max(1e-9, voiced.reduce((a, f) => a + (f.t - mt) ** 2, 0));
+  const dur = frames.length * H / sr;
+  // gebunden = Anteil der klingenden Stellen mit fester Tonhöhe (Pausen zählen nicht, Konsonanten und Atem schon)
+  return { range: q(0.95) - q(0.05), rate: notes / dur, drift: slope * dur, legato: voiced.length / Math.max(1, frames.filter((f) => f.loud).length) };
+}
+const MOODS = ["magical", "mysterious", "whimsical", "dreamy", "melancholic", "nostalgic", "playful", "gentle", "tender", "hopeful", "haunting",
+  "warm", "calm", "peaceful", "uplifting", "dark", "sad", "joyful", "epic", "triumphant", "eerie", "romantic", "serene", "wistful",
+  "cheerful", "energetic", "intense", "bittersweet", "soothing", "somber", "lighthearted"];
+function describeIdea(m, caption, key) {
+  const minor = /minor/i.test(key || "");
+  const pace = m.rate < 2 ? "slow" : m.rate < 3.5 ? "moderately paced" : "lively";
+  const shape = m.drift < -2 ? "descending" : m.drift > 2 ? "rising" : "gently circling";
+  const width = m.range < 5 ? "narrow" : m.range > 9 ? "wide" : "medium-range";
+  const smooth = m.legato > 0.6;   // Summen hat Atem- und Konsonantenlücken, 0,6 ist schon gebunden
+  const like = m.rate < 2 && smooth ? (minor || m.drift < -2 ? "like a gentle lullaby or a film ballad theme" : "like a tender lullaby or a folk ballad")
+    : m.rate < 3.5 ? (smooth ? "like a heartfelt ballad melody" : "like a simple folk tune")
+    : smooth ? "like a soaring pop melody" : minor ? "like a driving, rhythmic theme" : "like a cheerful dance tune";
+  const low = (caption || "").toLowerCase();
+  const moods = MOODS.filter((w) => new RegExp(`\\b${w}\\b`).test(low)).slice(0, 2);
+  return `${pace[0].toUpperCase() + pace.slice(1)} melody with a ${width}, ${shape} line and ${smooth ? "smooth, flowing" : "detached, rhythmic"} phrasing, ${like}` +
+    (moods.length ? `, ${moods.join(" and ")}` : "");
+}
+
+const recBtn = $("#recBtn"), recTime = $("#recTime");
+let rec = null;   // laufende Aufnahme: { stream, mr, chunks, start, timer }
+let recToggle = false;   // Screenreader: einmal aktivieren = Start, noch einmal = Stopp (Gedrückthalten geht mit VoiceOver nicht)
+let recPending = false, recAttempt = 0, recKeyboardUntil = 0;
+
+async function recStart() {
+  if (rec || recPending || recBtn.classList.contains("busy")) return;
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { dzState("err", t("rec_unsupported")); return; }
+  if (!$("#deepPanel").hidden) $("#modeSwitch").click();
+  const attempt = ++recAttempt;
+  recPending = true;
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: false, noiseSuppression: false } });
+  } catch {
+    if (attempt === recAttempt) { recToggle = false; recBtn.classList.remove('held'); dzState("err", t("rec_denied")); }
+    return;
+  } finally { recPending = false; }
+  if (attempt !== recAttempt || (!recBtn.classList.contains("held") && !recToggle)) { stream.getTracks().forEach((tr) => tr.stop()); return; }
+  let mr;
+  try { mr = new MediaRecorder(stream); }
+  catch (err) { stream.getTracks().forEach((tr) => tr.stop()); recToggle = false; recBtn.classList.remove('held'); dzState('err', `${t('error')}: ${err.message}`); return; }
+  rec = { stream, mr, chunks: [], start: performance.now(), timer: 0 };
+  mr.addEventListener("dataavailable", (e) => { if (e.data.size) rec.chunks.push(e.data); });
+  mr.addEventListener("stop", recFinish);
+  try { mr.start(); }
+  catch (err) { stream.getTracks().forEach((tr) => tr.stop()); rec = null; recToggle = false; recBtn.classList.remove('held'); dzState('err', `${t('error')}: ${err.message}`); return; }
+  recBtn.classList.add("on");
+  recBtn.setAttribute("aria-pressed", "true");
+  rec.timer = setInterval(() => {
+    const sec = (performance.now() - rec.start) / 1000;
+    recBtn.style.setProperty("--p", Math.min(1, sec / REC_MAX));
+    recTime.textContent = String(Math.floor(sec));
+    if (sec >= REC_MAX) recStop();
+  }, 100);
+}
+function recStop() {
+  recAttempt++;
+  recBtn.classList.remove("held");
+  recToggle = false;
+  if (!rec) return;
+  clearInterval(rec.timer);
+  if (rec.mr.state === "recording") rec.mr.stop();
+}
+async function recFinish() {
+  const { stream, chunks, mr, start } = rec;
+  rec = null;
+  stream.getTracks().forEach((tr) => tr.stop());
+  recBtn.classList.remove("on"); recBtn.style.removeProperty("--p"); recTime.textContent = "";
+  recBtn.setAttribute("aria-pressed", "false");
+  if (performance.now() - start < REC_MIN * 1000) { dzState("err", t("rec_short")); return; }
+  recBtn.classList.add("busy");
+  try {
+    const { wav, mono, rate } = await toWav(new Blob(chunks, { type: mr.mimeType }));
+    const idea = measureMelody(mono, rate) || { range: 5, rate: 2.5, drift: 0, legato: 0.8 };   // nichts Tonales gefunden: neutrale Werte
+    await analyzeFile(new File([wav], t("rec_name"), { type: "audio/wav" }), idea);   // Name ohne Endung: so steht er in der Meldung
+  } catch (err) { dzState("err", `${t("error")}: ${err.message}`); }
+  recBtn.classList.remove("busy");
+}
+// Browser-Aufnahme (webm/mp4) in Mono-WAV 16 Bit umwandeln; leise Mikrofone werden auf -1 dB angehoben
+async function toWav(blob) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+  let buf;
+  try { buf = await ctx.decodeAudioData(await blob.arrayBuffer()); }
+  finally { await ctx.close?.(); }
+  const n = buf.length, ch = buf.numberOfChannels, mono = new Float32Array(n);
+  for (let c = 0; c < ch; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) mono[i] += d[i] / ch; }
+  let peak = 0;
+  for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(mono[i]));
+  const gain = peak > 0 ? Math.min(0.89 / peak, 20) : 1;
+  const out = new DataView(new ArrayBuffer(44 + n * 2));
+  const str = (o, v) => { for (let i = 0; i < v.length; i++) out.setUint8(o + i, v.charCodeAt(i)); };
+  str(0, "RIFF"); out.setUint32(4, 36 + n * 2, true); str(8, "WAVE"); str(12, "fmt "); out.setUint32(16, 16, true);
+  out.setUint16(20, 1, true); out.setUint16(22, 1, true); out.setUint32(24, buf.sampleRate, true);
+  out.setUint32(28, buf.sampleRate * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true);
+  str(36, "data"); out.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, mono[i] * gain)); out.setInt16(44 + i * 2, v < 0 ? v * 32768 : v * 32767, true); }
+  return { wav: out.buffer, mono, rate: buf.sampleRate };
+}
+// Gedrückt halten: Zeigerereignisse decken Maus und Finger ab, Tastatur über Leertaste/Enter
+recBtn.addEventListener("pointerdown", (e) => { if (e.button === 0) { recBtn.classList.add("held"); recStart(); } });
+["pointerup", "pointercancel"].forEach((ev) => window.addEventListener(ev, () => { if (recBtn.classList.contains("held")) recStop(); }));
+recBtn.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); recKeyboardUntil = performance.now() + 1000; recBtn.classList.add("held"); recStart(); } });
+recBtn.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); recKeyboardUntil = performance.now() + 500; recStop(); } });
+recBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+// Klick ohne Maus (detail 0) kommt vom Screenreader: umschalten statt halten. Erst ansagen, dann das Mikrofon öffnen,
+// damit die Ansage nicht mit aufgenommen wird.
+recBtn.addEventListener("click", (e) => {
+  if (e.detail !== 0 || performance.now() < recKeyboardUntil) return;
+  if (rec || recPending || recToggle) { recStop(); return; }
+  recToggle = true;
+  announce(t("an_rec_start"));
+  setTimeout(() => { if (recToggle) recStart(); }, 1800);
+});
+window.addEventListener("blur", recStop);
 dz.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
 fileInput.addEventListener("change", () => analyzeFile(fileInput.files[0]));
 ["dragenter", "dragover"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("drag"); }));
@@ -264,6 +545,7 @@ async function refresh() {
     if (!dragging) renderFolders();
     const q = new URLSearchParams({ q: $("#search").value, favorites: onlyFav, folder: curFolder });
     songs = await api("/api/songs?" + q);
+    announceChanges(songs);
     if (!editingId && !dragging) render();   // während des Umbenennens nicht neu zeichnen, sonst verliert das Feld den Fokus
     const qu = await api("/api/queue");
     busy = qu.running.length || qu.queued;
@@ -272,6 +554,36 @@ async function refresh() {
   clearTimeout(refresh.t);
   refresh.t = setTimeout(refresh, busy ? 1500 : 8000);
 }
+
+// Ansage, wenn ein Song fertig wird oder scheitert (beim ersten Laden nur merken, nichts sagen)
+const lastStatus = new Map();
+function announceChanges(list) {
+  const first = lastStatus.size === 0;
+  for (const s of list) {
+    const was = lastStatus.get(s.id);
+    if (!first && was && was !== s.status) {
+      const name = (s.title || s.caption.split(",").slice(0, 3).join(",")) + (s.letter ? ` ${s.letter}` : "");
+      if (s.status === "done") announce(t("an_done", name));
+      if (s.status === "error") announce(t("an_error", name), true);
+    }
+    lastStatus.set(s.id, s.status);
+  }
+}
+
+// Tastenkürzel (mit Alt bzw. Option, damit sie nicht mit dem Tippen oder dem Screenreader kollidieren):
+// Alt+G generieren, Alt+R Aufnahme starten/beenden, Alt+B zur Bibliothek, Alt+N zum Formular
+document.addEventListener("keydown", (e) => {
+  if (!e.altKey || e.ctrlKey || e.metaKey) return;
+  if (document.querySelector('dialog[open]')) return;
+  const deepActive = !$("#deepPanel").hidden;
+  const act = {
+    KeyG: () => (deepActive ? $("#deepForm") : form).requestSubmit(),
+    KeyR: () => recBtn.dispatchEvent(new MouseEvent("click", { detail: 0 })),
+    KeyB: () => $("#libHeading").focus(),
+    KeyN: () => (deepActive ? $("#deepAction").value === 'voice' ? $("#deepSource") : $("#deepCaption") : form.prompt).focus(),
+  }[e.code];
+  if (act) { e.preventDefault(); act(); }
+});
 
 let libStats = null;
 function showLibStats() {
@@ -338,13 +650,15 @@ function render() {
       !p.imported && `<button class="sek icon" data-a="more" title="${t("more")}">＋</button>`,
       !p.imported && `<button class="sek icon" data-a="reuse" title="${t("reuse")}"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M12 3l7 7h-4v10h-6V10H5l7-7z"/></svg></button>`,
       ["error", "cancelled"].includes(s.status) && `<button class="sek icon" data-a="retry" title="${t("retry")}">↻</button>`,
-      `<button class="sek icon del" data-a="del" title="${["queued", "running"].includes(s.status) ? t("cancel") : t("del")}">✕</button>`,
+      armedKey === `song:${s.id}`
+        ? `<button class="sek icon del armed" data-a="del" data-arm="song:${s.id}" title="${t("del_q")}">?</button>`
+        : `<button class="sek icon del" data-a="del" data-arm="song:${s.id}" title="${["queued", "running"].includes(s.status) ? t("cancel") : t("del")}">✕</button>`,
     ].filter(Boolean).join("");
     return `<div class="song ${s.id === currentId ? "playing" : ""}${newGroup ? " new-group" : ""}" data-id="${s.id}" draggable="${folders.folders.length > 0 && s.id !== editingId}">
       ${left}
       <div style="min-width:0">${s.id === editingId
         ? `<input class="t-edit" data-id="${s.id}" value="${esc(s.title || "")}" placeholder="${esc(s.caption.split(",").slice(0, 3).join(","))}">`
-        : `<div class="t" data-a="rename" title="${t("rename")}">${esc(title)}</div>`
+        : `<div class="t" data-a="rename" role="heading" aria-level="3" title="${t("rename")}">${esc(title)}</div>`
       }<div class="m" title="${t("meta_tip")}">${esc(meta)}</div>${voice ? `<div class="small voice-parent">${t("voice_from_original")}${m.applied_sections?.length ? ` · ${t("voice_sections_applied",m.applied_sections.length)}` : ""}</div>` : ""}${state}${m.warnings?.length ? `<div class="s voice-warning">${esc(m.warnings.join(" "))}</div>` : ""}${window.voiceReviewMarkup?.(s)||""}</div>
       <div class="actions">${actions}</div>${lyr && openLyrics.has(s.id)
         ? `<div class="lyr-wrap"><pre class="lyr">${esc(lyr)}</pre><a class="download mini lyr-dl" download="${esc((title || s.id).replace(/[\\/:*?"<>|]+/g, "_"))}.txt" href="data:text/plain;charset=utf-8,${encodeURIComponent(lyr)}" title="${t("lyrics_dl")}">TXT ↓</a></div>`
@@ -388,11 +702,35 @@ $("#library").addEventListener("click", async (e) => {
     await api("/api/generate", { method: "POST", body: JSON.stringify({ ...p, instrumental: false, keep_caption: p.use_cot_caption !== true, title: s.title || "", seed: -1, variants: 1, group_id: s.group_id, folder_id: s.folder_id }) });
   }
   if (a === "del") {
-    if (!["queued", "running"].includes(s.status) && !confirm(t("del_q"))) return;
+    // Löschen in zwei Klicks: erster Klick macht aus ✕ ein ?, zweiter Klick auf dieselbe Stelle löscht.
+    // Abbrechen laufender oder wartender Songs geht weiter mit einem Klick.
+    if (!["queued", "running"].includes(s.status) && armedKey !== `song:${id}`) { arm(`song:${id}`); return; }
+    disarm(false);
     await api(`/api/songs/${id}`, { method: "DELETE" }).catch((err) => alert(err.message));
   }
   refresh();
 });
+// Zwei-Klick-Bestätigung statt Browser-Dialog (Song löschen, Ordner löschen, Server stoppen): der erste Klick
+// schaltet den Knopf scharf (rot, Rückfrage im Knopf), der zweite an derselben Stelle führt aus. Nach 3 s oder bei
+// einem Klick woandershin fällt er zurück. armedKey sagt, welcher Knopf scharf ist: "song:<id>", "folder:<id>", "stop".
+let armedKey = null, armedTimer = 0;
+function arm(key) {
+  armedKey = key;
+  clearTimeout(armedTimer);
+  armedTimer = setTimeout(() => disarm(), 3000);
+  redrawArmed();
+  document.querySelector(`[data-arm="${CSS.escape(key)}"]`)?.focus();   // Tastatur: Enter ein zweites Mal führt aus
+  announce(t("an_armed"));
+}
+function disarm(redraw = true) {
+  if (!armedKey) return;
+  armedKey = null;
+  clearTimeout(armedTimer);
+  if (redraw) redrawArmed();
+}
+function redrawArmed() { render(); renderFolders(); syncStopBtn(); }
+document.addEventListener("click", (e) => { if (armedKey && !e.target.closest("[data-arm]")) disarm(); }, true);
+
 // ---------------------------------------------------------------- Ordner
 function setFolder(id, reload = true) {
   curFolder = id;
@@ -400,16 +738,20 @@ function setFolder(id, reload = true) {
   if (reload) refresh();
 }
 function renderFolders() {
-  const chip = (id, name, n) => `<span class="chip fold${id === curFolder ? " on" : ""}" data-f="${id}" title="${esc(name)}">${esc(name)} <b>${n}</b></span>`;
+  const chip = (id, name, n) => `<span class="chip fold${id === curFolder ? " on" : ""}" role="button" tabindex="0" aria-pressed="${id === curFolder}" data-f="${id}" title="${esc(name)}">${esc(name)} <b>${n}</b></span>`;
   const cur = folders.folders.find((f) => f.id === curFolder);
+  const hadFocus = document.activeElement?.closest?.("#folderBar") ? document.activeElement.dataset.f : undefined;   // Tastaturfokus nach dem Neuzeichnen behalten
   $("#folderBar").innerHTML =
     chip("", t("f_all"), folders.all) +
     (folders.folders.length ? chip("none", t("f_none"), folders.none) : "") +
     folders.folders.map((f) => chip(f.id, f.name, f.count)).join("") +
     `<button type="button" class="chip add" data-fa="new" title="${t("f_new")}" aria-label="${t("f_new")}">＋</button>` +
     `<span class="fold-actions">` +
-    (cur ? `<button type="button" class="sek mini" data-fa="rename">${t("f_rename")}</button><button type="button" class="sek mini" data-fa="delete">${t("f_delete")}</button>` : "") +
+    (cur ? `<button type="button" class="sek mini" data-fa="rename">${t("f_rename")}</button>${armedKey === `folder:${cur.id}`
+      ? `<button type="button" class="sek mini armed" data-fa="delete" data-arm="folder:${cur.id}" title="${esc(t("f_delete_q", cur.name))}">${t("f_delete_sure")}</button>`
+      : `<button type="button" class="sek mini" data-fa="delete" data-arm="folder:${cur.id}">${t("f_delete")}</button>`}` : "") +
     `<a class="download mini" data-fa="zip" href="/api/download?folder=${encodeURIComponent(curFolder)}" title="${t("f_zip_tip")}">${cur ? t("f_zip") : t("f_zip_all")}</a></span>`;
+  if (hadFocus !== undefined) $("#folderBar").querySelector(`[data-f="${CSS.escape(hadFocus)}"]`)?.focus();
 }
 async function moveSong(id, folderId) {
   await api(`/api/songs/${id}`, { method: "PATCH", body: JSON.stringify({ folder_id: folderId === "none" ? null : folderId }) }).catch((e) => alert(e.message));
@@ -428,7 +770,9 @@ $("#folderBar").addEventListener("click", async (e) => {
       const name = prompt(t("f_name_q"), cur.name);
       if (name?.trim()) { await api(`/api/folders/${cur.id}`, { method: "PATCH", body: JSON.stringify({ name }) }); refresh(); }
     } else if (a === "delete" && cur) {
-      if (confirm(t("f_delete_q", cur.name))) { await api(`/api/folders/${cur.id}`, { method: "DELETE" }); setFolder(""); }
+      if (armedKey !== `folder:${cur.id}`) { arm(`folder:${cur.id}`); return; }
+      disarm(false);
+      await api(`/api/folders/${cur.id}`, { method: "DELETE" }); setFolder("");
     } else if (a === "zip" && !songs.some((s) => s.status === "done")) { e.preventDefault(); }
   } catch (err) { alert(t("error") + ": " + err.message); }
 });
@@ -511,7 +855,7 @@ function initPlayer() {
   $("#playBtn").onclick = () => ws.playPause();
   initVolume();
   document.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && !["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(e.target.tagName) && currentId) { e.preventDefault(); ws.playPause(); }
+    if (e.code === "Space" && !e.target.closest?.('input, textarea, select, button, [role="button"]') && currentId) { e.preventDefault(); ws.playPause(); }
   });
 }
 // Lautstärke: Regler klappt beim Zeigen auf den Lautsprecher aus; Klick auf den Lautsprecher = stumm
@@ -526,6 +870,7 @@ function applyVolume() {
   const v = muted ? 0 : volume;
   $("#vol").dataset.level = v === 0 ? "off" : v < 0.5 ? "low" : "high";
   $("#volRange").value = Math.round(volume * 100);
+  $("#volRange").setAttribute("aria-valuetext", `${Math.round(volume * 100)} %`);
   $("#vol").style.setProperty("--v", volume);
   $("#volBtn").title = $("#volBtn").ariaLabel = t(muted ? "unmute" : "mute");
   try { localStorage.setItem("volume", String(volume)); localStorage.setItem("muted", muted ? "1" : "0"); } catch {}
@@ -536,12 +881,15 @@ function initVolume() {
   applyVolume();
 }
 
+let playSeq = 0;
 async function play(s, position = null) {
   if (!ws) initPlayer();
   if (currentId === s.id) {
     if(position!==null){ws.setTime(Math.min(position,ws.getDuration()));return ws.play();}
     return ws.playPause();
   }
+  const seq = ++playSeq;
+  if (ws.isPlaying()) ws.pause();
   if (!played.has(s.id)) { markPlayed(s.id); render(); }
   currentId = s.id;
   $("#player").hidden = false;
@@ -551,7 +899,8 @@ async function play(s, position = null) {
   }
   $("#pTitle").textContent = s.title || s.caption;
   $("#pTitle").title = `Seed ${s.seed}` + (s.result_meta?.keyscale ? ` · ${s.result_meta.keyscale}` : "");
-  await ws.load(s.url);
+  try { await ws.load(s.url); } catch (err) { if (seq === playSeq) throw err; return; }   // abgebrochen, weil inzwischen ein anderer Song gewählt wurde
+  if (seq !== playSeq) return;
   if(position!==null)ws.setTime(Math.min(position,Math.max(0,ws.getDuration()-.01)));
   window.onSongPlayback?.(s);
   ws.play();
@@ -572,15 +921,15 @@ async function checkHealth() {
 const dlg = $("#settingsDlg"), sf = $("#settingsForm");
 $("#btnSettings").onclick = async () => {
   const s = await api("/api/settings");
-  for (const k of ["server_url", "lm_url", "timeout_minutes", "songs_dir", "dit"]) sf[k].value = s[k];
-  sf.dit.querySelector('option[value="xl"]').disabled=!s.dit_xl_available;
-  $('#ditHint').hidden=s.dit_xl_available;
+  for (const k of ["server_url", "lm_url", "timeout_minutes", "songs_dir", "dit", "lm_device"]) sf[k].value = s[k];
+  sf.dit.querySelector('option[value="xl"]').disabled = !s.dit_xl_available;   // XL nur wählbar, wenn die Datei da ist
+  $("#ditHint").hidden = s.dit_xl_available;
   sf.songs_dir.placeholder = s.songs_dir_default;   // Standard als Platzhalter, leer lassen = Standard
   dlg.showModal();
 };
 const saveSettings = () => api("/api/settings", { method: "PUT", body: JSON.stringify({
   server_url: sf.server_url.value.trim(), lm_url: sf.lm_url.value.trim(), timeout_minutes: Number(sf.timeout_minutes.value) || 30,
-  songs_dir: sf.songs_dir.value.trim(),dit:sf.dit.value }) }).then(result=>{document.dispatchEvent(new Event('settingschange'));return result;}).catch((err) => { alert(err.message); $("#btnSettings").click(); });
+  songs_dir: sf.songs_dir.value.trim(),dit:sf.dit.value,lm_device:sf.lm_device.value }) }).then(result=>{document.dispatchEvent(new Event('settingschange'));return result;}).catch((err) => { alert(err.message); $("#btnSettings").click(); });
 // Anordnung: untereinander oder Generator links / Bibliothek rechts
 function setLayout(l) {
   document.querySelector(".wrap").classList.toggle("side", l === "side");
@@ -624,10 +973,22 @@ updApply.onclick = async () => {
 $("#btnSettings").addEventListener("click", () => { updInfo.textContent = ""; updList.hidden = true; updApply.hidden = true; updApply.disabled = false; });
 
 // Server stoppen = „Music Generator OFF“ ausführen
+let stopTip = "";
+function syncStopBtn() {
+  const b = $("#stopBtn"), on = armedKey === "stop";
+  b.classList.toggle("armed", on);
+  b.textContent = t(on ? "stop_sure" : "stop");
+  b.title = on ? stopTip : "";
+}
+$("#stopBtn").dataset.arm = "stop";
 $("#stopBtn").onclick = async () => {
-  const qu = await api("/api/queue").catch(() => null);
-  const busy = qu && (qu.running.length || qu.queued);
-  if (!confirm(t(busy ? "stop_q_busy" : "stop_q"))) return;
+  if (armedKey !== "stop") {
+    const qu = await api("/api/queue").catch(() => null);
+    stopTip = t(qu && (qu.running.length || qu.queued) ? "stop_q_busy" : "stop_q");
+    arm("stop");
+    return;
+  }
+  disarm();
   clearTimeout(refresh.t);
   try {
     await api("/api/shutdown", { method: "POST" });

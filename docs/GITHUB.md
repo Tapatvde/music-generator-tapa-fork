@@ -1,44 +1,19 @@
-# Einen korrekt zugeordneten GitHub-Fork veröffentlichen
+# GitHub und Veröffentlichung
 
-## Was ein GitHub-Fork bedeutet
+Öffentlicher Fork: [Tapatvde/music-generator-tapa-fork](https://github.com/Tapatvde/music-generator-tapa-fork), weiterhin mit dem [Originalprojekt](https://github.com/rabbitfiremediacreation/music-generator) verbunden.
 
-Ein Fork ist ein eigenes Repository unter Deinem Konto, das GitHub dem Originalprojekt zuordnet. Es wird über **Fork → Create fork** am Original angelegt. Ein beliebiges neues Repository und ein ZIP-Upload allein stellen diese Beziehung nicht her. Eine Änderung des Originals ist dafür nicht erforderlich. Ein Pull Request ist nur nötig, wenn der Originalentwickler ausgewählte Änderungen in sein eigenes Projekt übernehmen soll.
+Die Ausgabe **2026.10.21-preview.1** aktualisiert den bisherigen öffentlichen Preview-Stand. Zuvor gab es keinen eigenen Release-Tag. Diese Ausgabe bleibt ein GitHub-Prerelease; eine nummerierte Preview ist keine stabile Freigabe.
 
-Offizielle Anleitung: [GitHub – Fork a repository](https://docs.github.com/en/pull-requests/how-tos/work-with-forks/fork-a-repo).
+Die öffentliche Historie enthält die bisherige öffentliche Fork-Historie, öffentliche Originaländerungen und einen bereinigten Quellstand. Die private Entwicklungshistorie wird nicht gepusht. Die Veröffentlichungs-Commits verwenden GitHubs noreply-Adresse.
 
-## Empfohlener Ablauf für dieses Paket
+## Installation und Kontrolle
 
-1. Unter Deinem Konto **Tapatvde** auf [die Originalseite](https://github.com/rabbitfiremediacreation/music-generator) gehen und **Fork** anklicken.
-2. Als Besitzer **Tapatvde** wählen. Empfohlener Name: **music-generator-tapa-fork**. Beschreibung: „Windows fork with local voice profiles, RVC training, original-song editing and optional XL sound model.“ Nur den Hauptzweig kopieren genügt.
-3. **Create fork** ausführen. GitHub zeigt danach die Herkunft „forked from rabbitfiremediacreation/music-generator“ an. Ein Fork eines öffentlichen Projekts ist ebenfalls öffentlich.
-4. Den neuen Fork für die verbundene GitHub-App freigeben, falls Deine App-Verbindung nur ausgewählte Repositories sehen darf. Es werden keine Zugangsdaten im Chat oder in Dateien benötigt.
-5. Den bereinigten Paketinhalt als zusätzlichen Commit auf Basis der öffentlichen Originalhistorie übertragen. **Nicht den privaten Arbeitszweig oder die gesamte private Installation pushen.** Auch alte gelöschte Inhalte können im privaten Git-Verlauf vorhanden sein.
-6. Auf GitHub README, LICENSE, Install.bat, Downloadmanifest und Dateien prüfen. Anschließend gegebenenfalls einen als Vorabversion markierten Release anlegen und Dein selbst erstelltes Quell-ZIP anhängen.
-7. Download dieses GitHub-Releases in einen neuen Ordner testen. Die technische Paketprüfung und ein erster eigener Hörtest gehören getrennt dokumentiert.
+Das Release-ZIP vollständig in einen neuen Ordner entpacken und Install.bat doppelklicken. PACKAGE-CONTENTS.json beschreibt jede Quelldatei; SHA256SUMS.txt enthält die zugehörigen Prüfsummen. Das Release bietet außerdem einen SHA-256 für die vollständige ZIP. Downloads und große Modelle werden erst vom sichtbaren Installer eingerichtet. Keine Nutzerstimmen, trainierten Profile oder Songs werden mitgeliefert.
 
-## Aktuell geprüfte Automatisierung
+## Bisherige Installation
 
-Der öffentliche Fork **Tapatvde/music-generator-tapa-fork** wurde über die angemeldete Browser-Sitzung erstellt. Die Verbindung zum Original ist erhalten. Nach gesonderter Installation des offiziellen ChatGPT Codex Connector für dieses Repository bestehen die erforderlichen Schreibrechte; Kontoautorisierung allein war dafür nicht ausreichend.
+Für diese Preview ist die sichere Variante eine parallele Installation in einem neuen Ordner. Die bisherige Installation zunächst behalten. Eigene Songs lassen sich über Fertigen Song importieren übernehmen. Stimmprofile und Trainingshistorie sind lokal und werden nicht automatisch zwischen Installationen migriert. Nicht die ganze neue ZIP blind über eine laufende Installation kopieren. Ein automatischer Fork-Updater ist nicht enthalten; der Button prüft nur lesend die Originaländerungen.
 
-Die vorhandenen GitHub-Werkzeuge übertragen ausschließlich den bereinigten Quellordner als zusätzlichen Commit auf Basis der öffentlichen Originalhistorie. Die private Arbeitsinstallation und ihre Git-Historie bleiben lokal. Es wurde kein Kommentar an den Originalentwickler gesendet. Eine nummerierte stabile Veröffentlichung beziehungsweise ein GitHub-Release ist eine gesonderte spätere Entscheidung.
+## Rückmeldungen und Beiträge
 
-## Was auf GitHub gehört
-
-Quellcode, lesbare Installationsskripte, Dokumentation, Herkunfts-/Lizenzhinweise und Prüfsummen. Die großen Komponenten werden nachgeladen. Eigene Stimmen, Aufnahmen, trainierte Gewichte, Indizes, Datenbanken, lokale Pfade, Zugangsdaten, Logs und private Historie gehören nicht in das öffentliche Repository.
-
-GitHub warnt ab 50 MiB pro Datei und blockiert reguläre Git-Dateien über 100 MiB; Releases erlauben größere Anlagen innerhalb ihrer eigenen Grenzen. Ein Modell-Upload ist für diesen Fork weder erforderlich noch vorgesehen. [Offizielle Größenregeln](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github).
-
-## Vor der tatsächlichen Veröffentlichung festlegen
-
-- Endgültiger Repository-Name und Beschreibung; eigene Kontakt-/Supportangaben nur auf ausdrücklichen Wunsch.
-- Bezeichnung als Preview/Alpha und eine Versionsnummer, sobald Du sie freigibst.
-- Ob automatische NC-Textzuordnung angeboten und in welchem Umfang kommerzielle Nutzung unterstützt werden soll.
-- Nachweis eines weiteren Installationsversuchs auf einem anderen passenden Rechner und Hörabnahme mit einem eigenen neuen Profil.
-- Langfristig versionierte Bezugsquelle für die geprüften Musikserver-Binärdateien.
-- Ob der Originalentwickler zusätzlich informiert oder ein konkreter Pull Request angeboten werden soll; das wird nicht automatisch gesendet.
-
-## Fortschritt am 13.10.2026
-
-Der Fork ist [hier erreichbar](https://github.com/Tapatvde/music-generator-tapa-fork). Vergleichsbasis ist der öffentliche Originalcommit 3681b03fe4a91886413f87577ac94e4c2b583416. Das Quellpaket ist als Installationskandidat/Preview gekennzeichnet.
-
-Der erste Schreibversuch meldete HTTP 403 „Resource not accessible by integration“. Anschließend wurde zwischen Kontoautorisierung und Repository-Installation unterschieden. Nach der Installation des Connectors durch den Kontoinhaber wurde das Repository sichtbar und ein Schreibtest erfolgreich durchgeführt. Zugangsdaten und Bestätigungscodes sind nicht Teil dieses Pakets.
+Fehler mit Preview-Version, Windows-/GPU-Version, nachvollziehbaren Schritten und bereinigter Fehlermeldung melden. Persönliche Songs, Trainingsaufnahmen, Modelle, Logs mit privaten Pfaden und Zugangsdaten nicht ungeprüft an Issues anhängen. Änderungen über einen eigenen Branch und Pull Request anbieten. Keine Nachricht oder Pull Request wird durch die Installation automatisch an den Originalentwickler gesendet.

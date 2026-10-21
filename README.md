@@ -2,9 +2,9 @@
 
 Ein transparenter Windows-Fork des [Music Generators von ALPHATESTER / rabbitfiremediacreation](https://github.com/rabbitfiremediacreation/music-generator). Er ergänzt lokale Songgenerierung um eigene Stimmprofile, RVC-Stimmumwandlung, Training, Instrumentalversionen, Originalbearbeitung und erweiterte Gesangssteuerung.
 
-**Status: öffentlicher Quellcode- und Installationskandidat, keine endgültig freigegebene stabile Version.** Stand 13.10.2026, Originalbasis `3681b03fe4a91886413f87577ac94e4c2b583416`. Der Fork ist eigenständig und wird nicht als offizielle Ausgabe des Originalentwicklers dargestellt.
+**Status: öffentlicher Quellcode- und Installationskandidat, keine endgültig freigegebene stabile Version.** Version **2026.10.21-preview.1**, Stand 21.10.2026, Originalbasis `8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8`. Der Fork ist eigenständig und wird nicht als offizielle Ausgabe des Originalentwicklers dargestellt.
 
-Quellrepository: [Tapatvde/music-generator-tapa-fork](https://github.com/Tapatvde/music-generator-tapa-fork).
+[Preview herunterladen](https://github.com/Tapatvde/music-generator-tapa-fork/releases/tag/2026.10.21-preview.1) · Quellrepository: [Tapatvde/music-generator-tapa-fork](https://github.com/Tapatvde/music-generator-tapa-fork).
 
 ## Installation in wenigen Schritten
 
@@ -15,12 +15,16 @@ Quellrepository: [Tapatvde/music-generator-tapa-fork](https://github.com/Tapatvd
 
 Voraussetzungen: Windows 10/11 x64, NVIDIA-GPU mit aktuellem CUDA-13-kompatiblem Treiber; für RVC in diesem Kandidaten eine kompatible GPU vor der RTX-50-Generation. Die technische Erprobung bezieht sich auf eine RTX 4080 mit 16 GB VRAM. Mindestens 16 GB RAM empfohlen. Etwa 20 GB freier Platz für Musik allein, 35 GB für Musik und Stimmen, mit XL zusätzlich mindestens 6 GB Reserve. Eigene Aufnahmen, Songs und Trainingsstände benötigen weiteren Platz. Es wird kein Systemtreiber installiert und keine Administratorfreigabe benötigt.
 
+Neue Ausgabe: [Änderungen seit der bisherigen Preview](docs/CHANGELOG-20261021.md).
+
 Details: [Installation und Wiederaufnahme](docs/INSTALLATION.md), [Bedienung](docs/BEDIENUNG.md), [Änderungen gegenüber dem Original](docs/AENDERUNGEN.md), [Lizenzen](docs/LIZENZEN.md), [GitHub-Veröffentlichung](docs/GITHUB.md), [Prüfstatus](docs/PRUEFSTATUS.md).
 
-Die komplette Anleitung lässt sich auch ohne Zusatzprogramm per Doppelklick auf [DOKUMENTATION.html](DOKUMENTATION.html) im Browser lesen. Die Markdown-Dateien bleiben als bearbeitbare Textquellen enthalten.
+Die komplette Anleitung lässt sich auch ohne Zusatzprogramm per Doppelklick auf [DOKUMENTATION.html](DOKUMENTATION.html) im Browser lesen. Die Markdown-Dateien bleiben als bearbeitbare Textquellen enthalten. scripts/build-documentation.py erzeugt die HTML-Fassung erneut (benötigt das im RVC-Lock enthaltene Markdown-Paket).
 
 ## Was der Fork ergänzt
 
+- Mikrofonideen aus 5–30 Sekunden Summen/Pfeifen/Gesang in Prompt, BPM, Tonart und Takt übertragen; vorhandene Lyrics, Stil und Länge bleiben erhalten. Keine exakte Melodieübernahme.
+- Sprachmodell wahlweise automatisch oder nur auf der CPU; die Klangerzeugung bleibt auf der GPU. Auswahl gilt ab dem nächsten Auftrag.
 - Eigene trockene Soloaufnahmen importieren, lokal ein RVC-Stimmprofil trainieren und anschließend im Dropdown verwenden. Keine fremden oder persönlichen Stimmen werden mitgeliefert.
 - Bereits fertige oder importierte Songs mit einem anderen Stimmprofil als zusätzliche Fassung bearbeiten; Originale bleiben erhalten.
 - Gesang entfernen und eine Instrumentalfassung als feste Grundlage für weitere Stimmversuche verwenden.

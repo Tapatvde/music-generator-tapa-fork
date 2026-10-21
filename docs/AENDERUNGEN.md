@@ -1,6 +1,6 @@
 # Änderungsnachweis gegenüber dem Original
 
-Original: [rabbitfiremediacreation/music-generator](https://github.com/rabbitfiremediacreation/music-generator), MIT, Copyright ALPHATESTER. Vergleichsbasis dieser Ausgabe: `3681b03fe4a91886413f87577ac94e4c2b583416`. Stand 13.10.2026. Dies ist ein dokumentierter Installationskandidat; eine semantische stabile Versionsnummer wurde noch nicht festgelegt.
+Original: [rabbitfiremediacreation/music-generator](https://github.com/rabbitfiremediacreation/music-generator), MIT, Copyright ALPHATESTER. Vergleichsbasis dieser Ausgabe: `8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8`. Stand 21.10.2026, Version 2026.10.21-preview.1. Dies bleibt ein dokumentierter Installationskandidat, keine stabile Freigabe.
 
 ## Funktionsübersicht
 
@@ -27,7 +27,9 @@ Original: [rabbitfiremediacreation/music-generator](https://github.com/rabbitfir
 | Installation | Install.bat mit Original-Installer | Vollständiger transparenter Downloadweg für RVC und Grundmodelle, Paket-Locks/Hashprüfung, optionale NC-Komponente | Windows/NVIDIA-Kandidat; Treiber vom Nutzer gepflegt |
 | Veröffentlichung | Arbeitsinstallation enthält eigene Inhalte | Separater bereinigter Quellordner, neutrale Profilvorgaben, Inhaltsmanifest | Private Git-Historie darf nicht gepusht werden |
 
-## Original-Updates, die bereits enthalten sind
+Siehe zusätzlich [Änderungen der neuen Preview](CHANGELOG-20261021.md).
+
+## Historische Originalbasis vom 13.10.2026
 
 Die Ausgangsfassung integriert die Originaländerungen bis `3681b03`: zwölf Oberflächensprachen, zentrale Servermeldungen, optionale XL-Installation, Entfernung des Testton-Backends, überarbeitete Installationsanleitungen und verständliche Meldungen für unerwartete Serverfehler. Für die Veröffentlichung werden die Original-Anleitungen durch die konsistenten Fork-Anleitungen dieses Ordners ersetzt. Aufbewahrte Copyright-Hinweise und Links belegen die Herkunft.
 

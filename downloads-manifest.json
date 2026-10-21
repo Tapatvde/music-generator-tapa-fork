@@ -34,158 +34,14 @@
       "executable_sha256": "86c4690be87a6bb6be1affe24b3c1b67ceedc86b477d6cde9f812fafd0f6d3b9"
     },
     {
-      "id": "ace-ace-server.exe",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ace-server.exe",
-      "cache_name": "ace-ace-server.exe",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ace-server.exe",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "caed09ca26245dcad8f276d0f5b764f20edbe5d8391ab30d4af6be13301a8aab",
-      "bytes": 1431552
-    },
-    {
-      "id": "ace-ggml-base.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-base.dll",
-      "cache_name": "ace-ggml-base.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-base.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "ae87be3ace6f19d9317fc9eeb49760f4a0970204e6444b438c87c54735372560",
-      "bytes": 693248
-    },
-    {
-      "id": "ace-ggml-cpu-alderlake.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-alderlake.dll",
-      "cache_name": "ace-ggml-cpu-alderlake.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-alderlake.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "c4870b4e067d55968274182619a7ddf3d9467e2381727e84408bd89c022572ce",
-      "bytes": 1011200
-    },
-    {
-      "id": "ace-ggml-cpu-cannonlake.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-cannonlake.dll",
-      "cache_name": "ace-ggml-cpu-cannonlake.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-cannonlake.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "b7ba23a603710db6eb3630bc21aa0d6efcce2c1bedc75e5d662dd50d0c2825cf",
-      "bytes": 1051648
-    },
-    {
-      "id": "ace-ggml-cpu-cascadelake.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-cascadelake.dll",
-      "cache_name": "ace-ggml-cpu-cascadelake.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-cascadelake.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "68003e14d7a32a84259c575642f4c31d7d498d35e518cff70941fe739c422789",
-      "bytes": 1062912
-    },
-    {
-      "id": "ace-ggml-cpu-haswell.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-haswell.dll",
-      "cache_name": "ace-ggml-cpu-haswell.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-haswell.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "b8425c82df457442425dc1e888272d8ae954f10a068a08ea4366a0b1f5673a29",
-      "bytes": 1012224
-    },
-    {
-      "id": "ace-ggml-cpu-icelake.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-icelake.dll",
-      "cache_name": "ace-ggml-cpu-icelake.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-icelake.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "6d6bcc4d2fe1234b20856a173925901a27552f8285c1b9f201e2a8c6afa5d00a",
-      "bytes": 1062912
-    },
-    {
-      "id": "ace-ggml-cpu-sandybridge.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-sandybridge.dll",
-      "cache_name": "ace-ggml-cpu-sandybridge.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-sandybridge.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "c155878713ef0b03620207d8ea8144c96620bd9c0587ca59097b5a3f78ea806c",
-      "bytes": 1027584
-    },
-    {
-      "id": "ace-ggml-cpu-skylakex.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-skylakex.dll",
-      "cache_name": "ace-ggml-cpu-skylakex.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-skylakex.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "8f0e90d465d9bdf7fbeb87471de4ca4ebc397ece9204a2bc53c0f9b9853a9d1a",
-      "bytes": 1051648
-    },
-    {
-      "id": "ace-ggml-cpu-sse42.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-sse42.dll",
-      "cache_name": "ace-ggml-cpu-sse42.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-sse42.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "13cb0565b3465888e67a3bcb22691a834fa949d80b4d4bd85e8a9d7a9a7333d4",
-      "bytes": 864768
-    },
-    {
-      "id": "ace-ggml-cpu-x64.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cpu-x64.dll",
-      "cache_name": "ace-ggml-cpu-x64.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cpu-x64.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "9dc115cf281799778c7ffd0a5e641a5019542399a7f845511030334c28a2506f",
-      "bytes": 868864
-    },
-    {
-      "id": "ace-ggml-cuda.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-cuda.dll",
-      "cache_name": "ace-ggml-cuda.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-cuda.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "2eeffd1561695d01a924782d89df7054ff6892b61a682456ab7e5a0664f0482c",
-      "bytes": 127867392
-    },
-    {
-      "id": "ace-ggml-vulkan.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml-vulkan.dll",
-      "cache_name": "ace-ggml-vulkan.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml-vulkan.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "a01306174c500e3d6015332ebffe20c1549f35e4cf0a201b5844f8748018ccff",
-      "bytes": 43645952
-    },
-    {
-      "id": "ace-ggml.dll",
-      "url": "https://www.serveurperso.com/temp/acestep.cpp-win64/build/Release/ggml.dll",
-      "cache_name": "ace-ggml.dll",
-      "kind": "file",
-      "target": "engine/acestep.cpp/build/Release/ggml.dll",
-      "mutable_url": true,
-      "license": "MIT; CUDA/Vulkan dependencies retain their licenses",
-      "sha256": "bd1339284fd2f00d2a6bf46c460c82a767c2e68e3b231de3e654554d9ee844ad",
-      "bytes": 62464
+      "id": "ace-runtime",
+      "url": "https://github.com/rabbitfiremediacreation/music-generator/releases/download/engine-win64-6013134/acestep-cpp-win64-6013134.zip",
+      "cache_name": "engine-win64-6013134.zip",
+      "kind": "zip",
+      "revision": "6013134",
+      "sha256": "647f4ffd1cb2f2e20ac3d54e92a45ed83d3cf9278e55e8b4da1c788fbfb74ac2",
+      "bytes": 132567042,
+      "license": "MIT for acestep.cpp/GGML; included notices and native dependencies retain their licenses"
     },
     {
       "id": "cuda13-cublas",
@@ -400,5 +256,6 @@
       "license": "CC-BY-NC-4.0",
       "requires_explicit_noncommercial_acknowledgement": true
     }
-  ]
+  ],
+  "engine_revision": "6013134"
 }

@@ -22,7 +22,7 @@ Die Abnahme der Stimmähnlichkeit erfolgt durch Anhören eines anderen Songs. Di
 |---|---|---|
 | uv 0.13.0 | offizielles GitHub-Release, erwarteter SHA-256 | engine/tools |
 | CPython 3.12.15 | python-build-standalone, Build 20261009, fester SHA-256 | engine/runtime/python |
-| Musikserver und GGML | Originalanbieter Serveurperso, geprüfter Dateisnapshot | engine/acestep.cpp/build/Release |
+| Musikserver und GGML | festes Original-Release engine-win64-6013134, ZIP-SHA-256 | engine/acestep.cpp/build/Release |
 | CUDA-13-/VC++-DLLs | versionierte Wheel-Dateien auf PyPI, erwartete Hashes | neben dem Musikserver |
 | ACE-Modelle | feste Hugging-Face-Revision 666ac70204440867d8c01ba4b119cc79c95b370a | engine/acestep.cpp/models |
 | RVC-Code | feste Revision 81eed5e8f68b6bed1789f682fe78cdd324495afc, Archiv-SHA und sichtbarer Patch | engine/rvc |
@@ -31,7 +31,7 @@ Die Abnahme der Stimmähnlichkeit erfolgt durch Anhören eines anderen Songs. Di
 | Optional MMS_FA | offizieller PyTorch/Meta-Download, fester Soll-Hash, CC-BY-NC-4.0 | engine/chorus-aligner |
 | Python-Pakete | vollständige Versions-/Hash-Locks einschließlich konkreter Torch-Wheels | .venv und engine/rvc/.venv |
 
-Die Musikserver-URLs sind beim Anbieter **nicht unveränderlich versioniert**. Ein Austausch wird durch die gespeicherten Hashes erkannt; der Installer verwendet dann keine unpassenden Dateien. Vor langfristiger Freigabe sollte der Fork-Betreiber einen zulässigen versionierten Download bereitstellen oder den Snapshot nach erneuter Abnahme aktualisieren. Keine Prüfsummen einfach entfernen.
+Der Musikserver wird aus dem festen [Original-Release engine-win64-6013134](https://github.com/rabbitfiremediacreation/music-generator/releases/tag/engine-win64-6013134) geladen. Der Installer prüft den ZIP-Hash vor dem Entpacken, prüft Zielpfade und erhält eine vorherige Laufzeit als Release.previous-Ordner. Modelle liegen außerhalb dieses Austauschs. Fremde Prozesse werden nicht beendet. Eine bereits vollständig geprüfte Laufzeit wird wiederverwendet. Keine Prüfsummen entfernen.
 
 Auch mit `-MusicOnly` werden die kleinen RVC-Quelldateien sowie FFmpeg/FFprobe für Audioimport und Deep Mode eingerichtet. Die große RVC-Python-Umgebung und Stimmgrundmodelle entfallen dabei. RVC lässt sich später durch erneuten Install.bat-Aufruf ergänzen.
 
@@ -39,7 +39,7 @@ Auch mit `-MusicOnly` werden die kleinen RVC-Quelldateien sowie FFmpeg/FFprobe f
 
 Ein fehlgeschlagener Download bleibt als `.part` im lokalen Downloadcache; Install.bat erneut starten setzt ihn fort. Unterstützt der Anbieter keine Byte-Range, bleibt das Teilstück erhalten und der Download beginnt erneut. Vollständig geladene Dateien werden geprüft und wiederverwendet. Abweichende vorhandene Modelldateien werden nicht überschrieben. Eine vollständig heruntergeladene Datei mit falschem Hash wird als `.bad-*` zur Untersuchung erhalten. Laufende eigene App vor erneuter Installation über OFF beenden. Aufnahmen und trainierte Profile liegen unter data und werden nicht zur Veröffentlichung kopiert.
 
-Voreinstellungen werden bei einer neuen Installation angelegt; vorhandene Einstellungen bleiben erhalten. Wird XL später nachgeladen, kann es anschließend in Setup beziehungsweise im Deep Mode gewählt werden. Der eigene Updater meldet nur Änderungen des Originals und überschreibt den Fork niemals automatisch. Die Prüfung funktioniert auch bei einer ZIP-Installation ohne Git.
+Voreinstellungen werden bei einer neuen Installation angelegt; vorhandene Einstellungen bleiben erhalten. Ohne -Cpu/-Auto bleibt die gespeicherte CPU-Wahl erhalten. Die Schalter schließen sich aus; Automatisch erhält das bisherige MODE-Testergebnis. Die Gerätewahl kann später unter Zahnrad geändert werden und gilt im Fork ab dem nächsten Auftrag. Wird XL später nachgeladen, kann es anschließend in Setup beziehungsweise im Deep Mode gewählt werden. Der eigene Updater meldet nur Änderungen des Originals und überschreibt den Fork niemals automatisch. Die Prüfung funktioniert auch bei einer ZIP-Installation ohne Git.
 
 ## Optionen für erfahrene Nutzer
 
@@ -48,6 +48,8 @@ Install.bat -Yes -LM 4B -XL -NoStart
 Install.bat -Yes -MusicOnly -LM 1.7B -NoStart
 Install.bat -Yes -Alignment -AcceptNonCommercialLicense -NoStart
 Install.bat -PlanOnly -LM 4B -XL
+Install.bat -Yes -LM 4B -Cpu -NoStart
+Install.bat -Yes -LM 4B -Auto -NoStart
 ```
 
 `-Yes` übernimmt die angegebenen Optionen ohne Fragen: RVC ist dabei enthalten, XL und MMS bleiben ohne ausdrückliche Optionen aus. `-PlanOnly` zeigt den Plan und schreibt nichts. `-AssetCache`, `-WheelCache`, `-NoNetwork` und `-SkipGpuCheck` sind Prüf-/Administrationsoptionen; sie gehören nicht zum normalen Doppelklick-Ablauf. Hardwareprüfung nicht umgehen, um eine inkompatible GPU als unterstützt darzustellen.

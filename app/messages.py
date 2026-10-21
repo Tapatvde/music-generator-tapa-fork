@@ -171,6 +171,20 @@ MSG = {
         "ja": "予期しないエラー ({e})。詳細は data/server.log にあります。",
         "zh": "发生意外错误 ({e})。详情见 data/server.log。",
     },
+    "bad_number": {
+        "de": "Ungültiger Wert für {field}: bitte eine Zahl größer als 0 angeben.",
+        "en": "Invalid value for {field}: please enter a number greater than 0.",
+        "es": "Valor no válido para {field}: indica un número mayor que 0.",
+        "fr": "Valeur invalide pour {field} : indique un nombre supérieur à 0.",
+        "it": "Valore non valido per {field}: inserisci un numero maggiore di 0.",
+        "pt": "Valor inválido para {field}: informe um número maior que 0.",
+        "tr": "{field} için geçersiz değer: lütfen 0'dan büyük bir sayı gir.",
+        "pl": "Nieprawidłowa wartość dla {field}: podaj liczbę większą niż 0.",
+        "ru": "Недопустимое значение для {field}: укажи число больше 0.",
+        "uk": "Недопустиме значення для {field}: вкажи число більше 0.",
+        "ja": "{field} の値が無効です。0 より大きい数値を入力してください。",
+        "zh": "{field} 的值无效: 请输入大于 0 的数字。",
+    },
     "gh_unreachable": {
         "de": "GitHub ist nicht erreichbar (Internetverbindung?).",
         "en": "GitHub is not reachable (internet connection?).",
@@ -263,9 +277,11 @@ MSG.update({
         'de':'Tapa Fork: Updates des Originals werden geprüft zusammengeführt. Eine direkte Aktualisierung ist gesperrt, damit unsere Erweiterungen erhalten bleiben.',
         'en':'Tapa Fork: upstream updates require a reviewed merge. Direct updates are disabled to preserve our extensions.'},
     'fork_song_path':{
-        'de':'Der Song-Ordner muss innerhalb von dem Programmordner bleiben.',
-        'en':'The song folder must remain inside the program folder.'},
+        'de':'Der Song-Ordner muss innerhalb von C:\\Music Generator Fork bleiben.',
+        'en':'The song folder must remain inside C:\\Music Generator Fork.'},
     'fork_unknown_model':{'de':'Unbekanntes Klangmodell.','en':'Unknown sound model.'},
+    'fork_unknown_lm_device':{'de':'Bitte für das Sprachmodell Automatisch oder Nur CPU wählen.',
+                              'en':'Choose Automatic or CPU only for the language model.'},
 })
 
 
