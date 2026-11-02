@@ -229,3 +229,4 @@ Vor kommerzieller Nutzung die Lizenz- und Trainingsdaten-Lage selbst prüfen.
 
 Der Code in diesem Repository steht unter der [MIT-Lizenz](LICENSE).
 `static/vendor/wavesurfer.min.js` stammt von [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js) (BSD-3-Clause).
+`static/vendor/qrcode.js` stammt von [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT, Version 1.4.4).

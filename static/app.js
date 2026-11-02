@@ -920,6 +920,17 @@ function showRemote(r) {
   $("#remoteInfo").hidden = !r.enabled;
   $("#remoteAddr").replaceChildren(...r.addresses.map(a => Object.assign(document.createElement("li"), { textContent: a })));
   $("#remoteToken").value = r.token;
+  // QR-Code für die iPhone-Kamera: öffnet die App, die Adresse (Ersatz: IP) und Schlüssel übernimmt
+  const qrBox = $("#remoteQr");
+  qrBox.replaceChildren();
+  if (r.enabled && r.addresses.length && typeof qrcode === "function") {
+    const q = new URLSearchParams({ server: r.addresses[0], token: r.token });
+    if (r.addresses[1]) q.set("alt", r.addresses[1]);
+    const qr = qrcode(0, "M");
+    qr.addData(`musicgenerator://connect?${q}`);
+    qr.make();
+    qrBox.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 8, scalable: true });
+  }
 }
 async function remoteCall(body) {
   remoteErr.hidden = true;

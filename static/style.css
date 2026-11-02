@@ -289,6 +289,8 @@ dialog .col-title { margin-bottom: 16px; }
 .seg button[aria-pressed=true] { border-color: var(--accent2); color: var(--accent2); }
 .upd-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .upd-list { margin: 6px 0 8px; padding-left: 18px; font-size: 12px; color: var(--muted); }
+.remote-qr { margin: 8px 0; line-height: 0; }
+.remote-qr svg { width: 180px; height: 180px; border-radius: 6px; }
 .err-t { color: var(--error); }
 @media (min-width: 1000px) {
   .wrap.side { max-width: 1480px; display: grid; grid-template-columns: minmax(400px, 480px) minmax(0, 1fr); align-items: start; }

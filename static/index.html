@@ -235,6 +235,8 @@
     <div class="field"><span class="lbl" title="Erlaubt der iPhone-App, im Heimnetz die Bibliothek abzuspielen und Songs zu erzeugen. Nur mit Zugangsschlüssel." data-i18n-title="remote_tip" data-i18n="remote">Handy-Zugriff</span>
       <select id="remoteSel"><option value="off" data-i18n="remote_off">Aus</option><option value="on" data-i18n="remote_on">An</option></select>
       <div id="remoteInfo" hidden>
+        <span class="small" data-i18n="remote_scan">Mit der iPhone-Kamera scannen, die App übernimmt Adresse und Schlüssel:</span>
+        <div id="remoteQr" class="remote-qr"></div>
         <span class="small" data-i18n="remote_addr">In der App unter „Verbindung“ eintragen:</span>
         <ul id="remoteAddr" class="upd-list"></ul>
         <div class="upd-row"><input id="remoteToken" readonly aria-label="Zugangsschlüssel" data-i18n-aria="remote_token"><button type="button" id="remoteNew" class="sek" data-i18n="remote_new">Neuer Schlüssel</button></div>
@@ -256,6 +258,7 @@
 </dialog>
 
 <script src="/static/vendor/wavesurfer.min.js"></script>
+<script src="/static/vendor/qrcode.js"></script>
 <script src="/static/i18n.js"></script>
 <script src="/static/app.js"></script>
 </body>
