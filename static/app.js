@@ -913,6 +913,28 @@ updApply.onclick = async () => {
 };
 $("#btnSettings").addEventListener("click", () => { updInfo.textContent = ""; updList.hidden = true; updApply.hidden = true; updApply.disabled = false; });
 
+// Handy-Zugriff: zweiter Zugang im Heimnetz für die iPhone-App, gilt sofort (eigener Aufruf, nicht über SPEICHERN)
+const remoteSel = $("#remoteSel"), remoteErr = $("#remoteErr");
+function showRemote(r) {
+  remoteSel.value = r.enabled ? "on" : "off";
+  $("#remoteInfo").hidden = !r.enabled;
+  $("#remoteAddr").replaceChildren(...r.addresses.map(a => Object.assign(document.createElement("li"), { textContent: a })));
+  $("#remoteToken").value = r.token;
+}
+async function remoteCall(body) {
+  remoteErr.hidden = true;
+  try {
+    showRemote(await api("/api/remote", body ? { method: "POST", body: JSON.stringify(body) } : {}));
+  } catch (e) {
+    remoteErr.textContent = e.message; remoteErr.hidden = false;
+    if (body) api("/api/remote").then(showRemote).catch(() => {});   // tatsächlichen Stand zeigen
+  }
+}
+$("#btnSettings").addEventListener("click", () => remoteCall());
+remoteSel.onchange = () => remoteCall({ enabled: remoteSel.value === "on" });
+$("#remoteNew").onclick = () => remoteCall({ new_token: true });
+$("#remoteToken").onfocus = (e) => e.target.select();
+
 // Server stoppen = „Music Generator OFF“ ausführen
 let stopTip = "";
 function syncStopBtn() {

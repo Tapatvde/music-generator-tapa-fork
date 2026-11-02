@@ -232,6 +232,16 @@
       <ul id="updList" class="upd-list" hidden></ul>
       <button type="button" id="updApply" class="aktion" hidden data-i18n="upd_apply">JETZT AKTUALISIEREN</button>
     </div>
+    <div class="field"><span class="lbl" title="Erlaubt der iPhone-App, im Heimnetz die Bibliothek abzuspielen und Songs zu erzeugen. Nur mit Zugangsschlüssel." data-i18n-title="remote_tip" data-i18n="remote">Handy-Zugriff</span>
+      <select id="remoteSel"><option value="off" data-i18n="remote_off">Aus</option><option value="on" data-i18n="remote_on">An</option></select>
+      <div id="remoteInfo" hidden>
+        <span class="small" data-i18n="remote_addr">In der App unter „Verbindung“ eintragen:</span>
+        <ul id="remoteAddr" class="upd-list"></ul>
+        <div class="upd-row"><input id="remoteToken" readonly aria-label="Zugangsschlüssel" data-i18n-aria="remote_token"><button type="button" id="remoteNew" class="sek" data-i18n="remote_new">Neuer Schlüssel</button></div>
+        <span class="small" data-i18n="remote_hint">Gilt sofort. Der Rechner darf dabei nicht schlafen.</span>
+      </div>
+      <span id="remoteErr" class="small err-t" hidden></span>
+    </div>
     <div class="field"><span class="lbl" data-i18n="servers">Server</span>
       <div class="upd-row"><button type="button" id="stopBtn" class="sek danger" data-i18n="stop">Server stoppen</button><span id="stopInfo" class="small"></span></div>
     </div>

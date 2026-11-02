@@ -56,6 +56,8 @@ DEFAULT_SETTINGS = {
     "highs": "off",                    # Höhen ausgleichen: "on" hebt die Höhen an, die der Klang-Decoder verliert (app/klang.py)
     "export_format": "wav",            # Download/Export: "wav" (verlustfrei, wie erzeugt) oder "mp3" (umgewandelt, kleiner)
     "songs_dir": "",                   # leer = data/songs im Programmordner, sonst absoluter Pfad
+    "remote": "off",                   # Handy-Zugriff im Heimnetz: "on" öffnet einen zweiten Zugang (app/main.py, REMOTE_PORT)
+    "remote_token": "",                # Zugangsschlüssel dafür, wird beim ersten Einschalten erzeugt
 }
 
 _lock = threading.Lock()

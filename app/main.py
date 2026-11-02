@@ -5,20 +5,22 @@ import logging
 import os
 import random
 import re
+import secrets
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
 import uuid
 import zipfile
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime
 from pathlib import Path
 
+import uvicorn
 from fastapi import FastAPI, Header, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 
@@ -127,7 +129,13 @@ async def lifespan(app: FastAPI):
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     task = asyncio.create_task(worker())
     _wakeup.set()
+    if db.get_settings().get("remote") == "on":
+        try:
+            await _fern.start()
+        except OSError as e:
+            log.warning("Handy-Zugriff ließ sich nicht starten (Port %s): %s", REMOTE_PORT, e)
     yield
+    await _fern.stop()
     task.cancel()
 
 
@@ -140,8 +148,6 @@ async def unexpected_error(request, exc):
     log.exception("Unerwarteter Fehler bei %s %s", request.method, request.url.path)
     return JSONResponse(status_code=500, content={"detail": tr(request.headers.get("x-lang", "en"), "unexpected", e=type(exc).__name__)})
 
-# Nur Aufrufe an localhost annehmen: schützt gegen DNS-Rebinding (fremde Domain, die auf 127.0.0.1 zeigt)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"])
 app.include_router(updater.router)
 
 
@@ -152,6 +158,130 @@ async def no_cache(request, call_next):
     if request.url.path == "/" or request.url.path.startswith("/static/"):
         resp.headers["Cache-Control"] = "no-cache"
     return resp
+
+
+# ---------------------------------------------------------------- Handy-Zugriff
+
+REMOTE_PORT = 8766
+# Über den Handy-Zugriff gesperrt: alles, was den Rechner selbst betrifft
+REMOTE_BLOCKED = ("/api/shutdown", "/api/update/", "/api/remote")
+
+
+@app.middleware("http")
+async def zugang(request, call_next):
+    """Der normale Zugang nimmt nur Aufrufe an localhost an: schützt gegen DNS-Rebinding (fremde Domain, die auf 127.0.0.1
+    zeigt). Der Handy-Zugriff (eigener Port) liefert nur die API und verlangt den Zugangsschlüssel."""
+    lang = request.headers.get("x-lang", "en")
+    if (request.scope.get("server") or (None, None))[1] != REMOTE_PORT:
+        if request.headers.get("host", "").rsplit(":", 1)[0] not in ("localhost", "127.0.0.1"):
+            return PlainTextResponse("Invalid host header", status_code=400)
+        return await call_next(request)
+    token = db.get_settings().get("remote_token") or ""
+    sent = request.headers.get("authorization", "")
+    if not token or not secrets.compare_digest(sent.encode(), f"Bearer {token}".encode()):
+        return JSONResponse(status_code=401, content={"detail": tr(lang, "remote_denied")})
+    path = request.url.path
+    if not path.startswith("/api/") or path.startswith(REMOTE_BLOCKED) or (path == "/api/settings" and request.method != "GET"):
+        return JSONResponse(status_code=403, content={"detail": tr(lang, "remote_blocked")})
+    return await call_next(request)
+
+
+class _Nebenserver(uvicorn.Server):
+    @contextmanager
+    def capture_signals(self):   # Signale (Strg+C, Beenden) gehören dem Hauptserver
+        yield
+
+
+class Fernzugriff:
+    """Zweiter Zugang auf allen Netzwerkschnittstellen im selben Prozess, damit das Handy im Heimnetz die Bibliothek
+    abspielen und Songs erzeugen kann. Lässt sich ohne Neustart ein- und ausschalten."""
+    def __init__(self):
+        self._server: _Nebenserver | None = None
+        self._task: asyncio.Task | None = None
+
+    @property
+    def an(self) -> bool:
+        return self._task is not None and not self._task.done()
+
+    async def start(self):
+        if self.an:
+            return
+        # Den Port selbst öffnen: scheitert uvicorn beim Binden, beendet es mit sys.exit den ganzen Prozess
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            if sys.platform != "win32":   # unter Windows erlaubt SO_REUSEADDR das doppelte Belegen eines Ports
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("0.0.0.0", REMOTE_PORT))
+        except OSError:
+            sock.close()
+            raise
+        # log_config/log_level None: die Protokoll-Einstellungen des Hauptservers nicht überschreiben
+        config = uvicorn.Config(app, lifespan="off", log_config=None, log_level=None, timeout_graceful_shutdown=2)
+        self._server = _Nebenserver(config)
+        self._task = asyncio.create_task(self._server.serve(sockets=[sock]))
+        log.info("Handy-Zugriff an, Port %s", REMOTE_PORT)
+
+    async def stop(self):
+        if not self._task:
+            return
+        self._server.should_exit = True
+        try:
+            await asyncio.wait_for(self._task, 5)
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            self._task.cancel()
+        self._server = self._task = None
+        log.info("Handy-Zugriff aus")
+
+
+_fern = Fernzugriff()
+
+
+def _adressen() -> list[str]:
+    """Adressen, unter denen das Handy diesen Rechner im Heimnetz findet."""
+    names = []
+    if sys.platform == "darwin":
+        try:
+            n = subprocess.run(["scutil", "--get", "LocalHostName"], capture_output=True, text=True, timeout=3).stdout.strip()
+            if n:
+                names.append(f"{n}.local")
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    else:
+        names.append(socket.gethostname())
+    try:   # eigene Adresse im Heimnetz: Route zu einer privaten Adresse nachschlagen, es wird nichts gesendet
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("10.255.255.255", 1))
+            names.append(s.getsockname()[0])
+    except OSError:
+        pass
+    return [f"http://{n}:{REMOTE_PORT}" for n in dict.fromkeys(names) if n and not n.startswith("127.")]
+
+
+class RemoteIn(BaseModel):
+    enabled: bool | None = None
+    new_token: bool = False
+
+
+@app.get("/api/remote")
+def remote_status():
+    return {"enabled": _fern.an, "port": REMOTE_PORT, "token": db.get_settings().get("remote_token", ""),
+            "addresses": _adressen()}
+
+
+@app.post("/api/remote")
+async def remote_set(r: RemoteIn, x_lang: str = Header("de")):
+    if r.new_token or (r.enabled and not db.get_settings().get("remote_token")):
+        db.save_settings({"remote_token": secrets.token_urlsafe(18)})
+    if r.enabled is not None:
+        if r.enabled:
+            try:
+                await _fern.start()
+            except OSError as e:
+                raise HTTPException(409, tr(x_lang, "remote_port_busy", port=REMOTE_PORT, e=e.strerror or e)) from e
+        else:
+            await _fern.stop()
+        db.save_settings({"remote": "on" if r.enabled else "off"})
+    return remote_status()
 
 
 # ---------------------------------------------------------------- Modelle
