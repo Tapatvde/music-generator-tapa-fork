@@ -33,6 +33,12 @@ Kein Git, kein Python, kein Installationsbefehl. Entwickelt gemeinsam mit **Fran
 
 </details>
 
+## Neu: die iPhone-App
+
+Auf dem Sofa hören, Sterne vergeben, in Ordner sortieren, Songs aufs iPhone laden und neue Songs anstoßen, während der Mac rechnet. Die App rechnet nichts selbst und braucht kein Konto: Sie spricht über dein Heimnetz mit der Web-App (unter *Setup* den **Handy-Zugriff** einschalten, dann den QR-Code mit der iPhone-Kamera scannen). Die Desktop-App bekommt dieselbe Funktion, sobald der entsprechende Pull Request übernommen ist.
+
+Die App gibt es nicht im App Store, sie wird mit Xcode selbst aufs iPhone gebaut (Mac und kostenlose Apple-ID genügen). Quellcode und Anleitung: [music-generator-ios](https://github.com/rabbitfiremediacreation/music-generator-ios).
+
 **Web-App im Überblick:**
 - **Mac** (Apple Silicon, Metal): diese Seite
 - **Windows** (NVIDIA, CUDA/Vulkan): [README-WINDOWS.md](README-WINDOWS.md)
