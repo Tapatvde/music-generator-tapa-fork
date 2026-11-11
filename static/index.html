@@ -124,8 +124,9 @@
       <div class="field"><span class="lbl" data-i18n="length">Länge</span>
         <div class="slider" data-fmt="dur">
           <div class="fill"></div><div class="knob"><span></span></div>
-          <input name="duration" type="range" min="10" max="300" step="5" value="90" aria-label="Länge" title="0:10 bis 5:00" data-i18n-aria="length" data-i18n-title="length_tip">
+          <input name="duration" type="range" min="10" max="600" step="5" value="90" aria-label="Länge" title="0:10 bis 10:00" data-i18n-aria="length" data-i18n-title="length_tip">
         </div>
+        <span class="small" id="lenHint" hidden data-i18n="len_long">Lange Songs brauchen viel Zeit und Speicher.</span>
       </div>
 
       <div class="field"><span class="lbl" title="Ganz links = Auto: Das Modell wählt das Tempo." data-i18n-title="bpm_tip">BPM</span>
@@ -151,16 +152,16 @@
 
       <details id="advBox">
         <summary data-i18n="advanced">Erweitert</summary>
-        <div class="field adv"><span class="lbl" title="Diffusionsschritte der Klangerzeugung. Mehr = langsamer, ab etwa 50 kaum noch hörbar besser (Modell-Vorgabe: 50)." data-i18n-title="iterations_tip" data-i18n="iterations">Iterationen</span>
+        <div class="field adv"><span class="lbl" title="Diffusionsschritte der Klangerzeugung. Mehr = langsamer, App-Standard: 80 (Modell-Vorgabe: 50)." data-i18n-title="iterations_tip" data-i18n="iterations">Iterationen</span>
           <div class="slider" data-fmt="int">
             <div class="fill"></div><div class="knob"><span></span></div>
-            <input name="inference_steps" type="range" min="10" max="100" step="5" value="50" aria-label="Iterationen" data-i18n-aria="iterations">
+            <input name="inference_steps" type="range" min="10" max="100" step="5" value="80" aria-label="Iterationen" data-i18n-aria="iterations">
           </div>
         </div>
-        <div class="field adv"><span class="lbl" title="Wie mutig das Sprachmodell den Song plant. Niedriger = vorhersehbar, höher = abwechslungsreicher, zu hoch = zerfahren (Modell-Vorgabe: 0.85)." data-i18n-title="variance_tip" data-i18n="variance">Varianz</span>
+        <div class="field adv"><span class="lbl" title="Wie mutig das Sprachmodell den Song plant. Niedriger = vorhersehbar, höher = abwechslungsreicher, zu hoch = zerfahren (App-Standard: 0.85)." data-i18n-title="variance_tip" data-i18n="variance">Varianz</span>
           <div class="slider" data-fmt="temp">
             <div class="fill"></div><div class="knob"><span></span></div>
-            <input name="lm_temperature" type="range" min="0.3" max="1.5" step="0.05" value="1" aria-label="Varianz" data-i18n-aria="variance">
+            <input name="lm_temperature" type="range" min="0.3" max="1.5" step="0.05" value="0.85" aria-label="Varianz" data-i18n-aria="variance">
           </div>
         </div>
         <div class="grid">
@@ -276,6 +277,13 @@
       <span class="small" data-i18n="dit_hint">XL benötigt mehr Grafikspeicher und Rechenzeit. Gilt für neue Songs und neue Arrangements; bestehende Aufnahmen bleiben erhalten.</span>
       <span class="small" id="ditHint" hidden data-i18n="dit_xl_missing">XL fehlt. Im Installer zusätzlich herunterladen.</span>
     </label>
+    <label class="field"><span class="lbl" title="" data-i18n-title="highs_tip" data-i18n="highs">Höhen ausgleichen</span>
+      <select name="highs"><option value="off" data-i18n="highs_off">Aus</option><option value="on" data-i18n="highs_on">An</option></select>
+    </label>
+    <label class="field"><span class="lbl" title="Gilt für Download und ZIP. In der Bibliothek bleibt immer das verlustfreie WAV; MP3 wird beim Download daraus gemacht (192 kbit/s)." data-i18n-title="exp_tip" data-i18n="exp">Export</span>
+      <select name="export_format"><option value="wav" data-i18n="exp_wav">WAV (verlustfrei)</option><option value="mp3" data-i18n="exp_mp3">MP3 (kleiner)</option></select>
+      <span class="small" id="expHint" hidden data-i18n="exp_no_mp3">MP3-Wandler nicht gefunden, nur WAV möglich.</span>
+    </label>
     <label class="field"><span class="lbl" title="Leer = data/songs im Programmordner. Beim Ändern werden die vorhandenen Songs dorthin verschoben." data-i18n-title="songs_dir_tip" data-i18n="songs_dir">Song-Ordner</span>
       <input name="songs_dir" placeholder="">
     </label>
@@ -288,6 +296,18 @@
       <div class="upd-row"><button type="button" id="updCheck" class="sek" data-i18n="upd_check">Nach Updates suchen</button><span id="updInfo" class="small"></span></div>
       <ul id="updList" class="upd-list" hidden></ul>
       <button type="button" id="updApply" class="aktion" hidden data-i18n="upd_apply">JETZT AKTUALISIEREN</button>
+    </div>
+    <div class="field"><span class="lbl" title="Erlaubt der iPhone-App, im Heimnetz die Bibliothek abzuspielen und Songs zu erzeugen. Nur mit Zugangsschlüssel." data-i18n-title="remote_tip" data-i18n="remote">Handy-Zugriff</span>
+      <select id="remoteSel"><option value="off" data-i18n="remote_off">Aus</option><option value="on" data-i18n="remote_on">An</option></select>
+      <div id="remoteInfo" hidden>
+        <span class="small" data-i18n="remote_scan">Mit der iPhone-Kamera scannen, die App übernimmt Adresse und Schlüssel:</span>
+        <div id="remoteQr" class="remote-qr"></div>
+        <span class="small" data-i18n="remote_addr">In der App unter „Verbindung“ eintragen:</span>
+        <ul id="remoteAddr" class="upd-list"></ul>
+        <div class="upd-row"><input id="remoteToken" readonly aria-label="Zugangsschlüssel" data-i18n-aria="remote_token"><button type="button" id="remoteNew" class="sek" data-i18n="remote_new">Neuer Schlüssel</button></div>
+        <span class="small" data-i18n="remote_hint">Gilt sofort. Der Rechner darf dabei nicht schlafen.</span>
+      </div>
+      <span id="remoteErr" class="small err-t" hidden></span>
     </div>
     <div class="field"><span class="lbl" data-i18n="servers">Server</span>
       <div class="upd-row"><button type="button" id="stopBtn" class="sek danger" data-i18n="stop">Server stoppen</button><span id="stopInfo" class="small"></span></div>
@@ -354,6 +374,7 @@
   </form>
 </dialog>
 <script src="/static/vendor/wavesurfer.min.js"></script>
+<script src="/static/vendor/qrcode.js"></script>
 <script src="/static/i18n.js"></script>
 <script src="/static/app.js"></script>
 <script src="/static/voices.js"></script>

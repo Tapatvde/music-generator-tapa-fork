@@ -1,6 +1,6 @@
 # Änderungsnachweis gegenüber dem Original
 
-Original: [rabbitfiremediacreation/music-generator](https://github.com/rabbitfiremediacreation/music-generator), MIT, Copyright ALPHATESTER. Vergleichsbasis dieser Ausgabe: `8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8`. Stand 21.10.2026, Version 2026.10.21-preview.1. Dies bleibt ein dokumentierter Installationskandidat, keine stabile Freigabe.
+Original: [rabbitfiremediacreation/music-generator](https://github.com/rabbitfiremediacreation/music-generator), MIT, Copyright ALPHATESTER. Vergleichsbasis dieser Ausgabe: `32b049865f0a4677d42e034b56a091c250cc2b56`. Stand 11.11.2026, Version 2026.11.11-preview.1. Dies bleibt ein dokumentierter Installationskandidat, keine stabile Freigabe.
 
 ## Funktionsübersicht
 
@@ -27,7 +27,7 @@ Original: [rabbitfiremediacreation/music-generator](https://github.com/rabbitfir
 | Installation | Install.bat mit Original-Installer | Vollständiger transparenter Downloadweg für RVC und Grundmodelle, Paket-Locks/Hashprüfung, optionale NC-Komponente | Windows/NVIDIA-Kandidat; Treiber vom Nutzer gepflegt |
 | Veröffentlichung | Arbeitsinstallation enthält eigene Inhalte | Separater bereinigter Quellordner, neutrale Profilvorgaben, Inhaltsmanifest | Private Git-Historie darf nicht gepusht werden |
 
-Siehe zusätzlich [Änderungen der neuen Preview](CHANGELOG-20261021.md).
+Siehe zusätzlich [Änderungen der neuen Preview](CHANGELOG-20261111.md).
 
 ## Historische Originalbasis vom 13.10.2026
 

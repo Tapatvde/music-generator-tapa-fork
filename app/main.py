@@ -5,21 +5,23 @@ import logging
 import os
 import random
 import re
+import secrets
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
 import uuid
 import zipfile
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
+import uvicorn
 from fastapi import FastAPI, Header, HTTPException, UploadFile, Form, File
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 
@@ -29,6 +31,7 @@ from .engines import EngineError, make_engine, DIT_MODELS
 from .managed_engine import make_fork_engine
 from .mix_settings import MixSettings
 from .levels import wrap_engine
+from .klang import hoehen_ausgleichen
 from .messages import tr
 
 log = logging.getLogger('uvicorn.error')
@@ -98,7 +101,11 @@ async def worker():
         _wach.an()
         sid = job["id"]
         table='voice_training' if is_training else 'songs'
-        db.execute(f"UPDATE {table} SET status='running', message='0:00' WHERE id=?", (sid,))
+        if is_training:
+            db.execute("UPDATE voice_training SET status='running', message='0:00' WHERE id=?", (sid,))
+        else:
+            db.execute("UPDATE songs SET status='running', message='0:00', started_at=? WHERE id=?", (now(),sid))
+        job_settings = db.get_settings()
         params = json.loads(job["params"])
         if is_training:
             params['name']=job['name'];engine=voice_training.TrainingEngine(sid)
@@ -122,6 +129,9 @@ async def worker():
                 continue
             finally:
                 _running.clear()
+            if not is_training and ext == "wav" and job_settings.get("highs") == "on" and params.get('job_type') in (None,'deep'):
+                audio = await asyncio.to_thread(hoehen_ausgleichen, audio)
+                meta['highs_applied'] = True
             fname = f"{sid}.{ext}"
             if is_training:
                 db.execute("UPDATE voice_training SET status='done',message=NULL,result_meta=?,finished_at=? WHERE id=? AND status='running'",
@@ -159,7 +169,13 @@ async def lifespan(app: FastAPI):
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     task = asyncio.create_task(worker())
     _wakeup.set()
+    if db.get_settings().get("remote") == "on":
+        try:
+            await _fern.start()
+        except OSError as e:
+            log.warning("Handy-Zugriff ließ sich nicht starten (Port %s): %s", REMOTE_PORT, e)
     yield
+    await _fern.stop()
     task.cancel()
     try:
         await task
@@ -178,8 +194,6 @@ async def unexpected_error(request, exc):
     log.exception("Unerwarteter Fehler bei %s %s", request.method, request.url.path)
     return JSONResponse(status_code=500, content={"detail": tr(request.headers.get("x-lang", "en"), "unexpected", e=type(exc).__name__)})
 
-# Nur Aufrufe an localhost annehmen: schützt gegen DNS-Rebinding (fremde Domain, die auf 127.0.0.1 zeigt)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"])
 app.include_router(updater.router)
 
 
@@ -190,6 +204,131 @@ async def no_cache(request, call_next):
     if request.url.path == "/" or request.url.path.startswith("/static/"):
         resp.headers["Cache-Control"] = "no-cache"
     return resp
+
+
+# ---------------------------------------------------------------- Handy-Zugriff
+
+REMOTE_PORT = 8767   # 8766 is the fork's local UI; never require a token for its loopback access.
+# Über den Handy-Zugriff gesperrt: alles, was den Rechner selbst betrifft
+REMOTE_BLOCKED = ("/api/shutdown", "/api/update/", "/api/remote")
+
+
+@app.middleware("http")
+async def zugang(request, call_next):
+    """Der normale Zugang nimmt nur Aufrufe an localhost an: schützt gegen DNS-Rebinding (fremde Domain, die auf 127.0.0.1
+    zeigt). Der Handy-Zugriff (eigener Port) liefert nur die API und verlangt den Zugangsschlüssel."""
+    lang = request.headers.get("x-lang", "en")
+    if (request.scope.get("server") or (None, None))[1] != REMOTE_PORT:
+        if request.headers.get("host", "").rsplit(":", 1)[0] not in ("localhost", "127.0.0.1"):
+            return PlainTextResponse("Invalid host header", status_code=400)
+        return await call_next(request)
+    token = db.get_settings().get("remote_token") or ""
+    sent = request.headers.get("authorization", "")
+    if not token or not secrets.compare_digest(sent.encode(), f"Bearer {token}".encode()):
+        return JSONResponse(status_code=401, content={"detail": tr(lang, "remote_denied")})
+    path = request.url.path
+    allowed = path in ('/api/settings','/api/health','/api/queue','/api/songs','/api/folders','/api/generate','/api/analyze','/api/download') or re.fullmatch(r'/api/(?:songs/[\w-]+(?:/(?:audio|retry))?|folders/[\w-]+)',path)
+    if not allowed or path.startswith(REMOTE_BLOCKED) or (path == "/api/settings" and request.method != "GET"):
+        return JSONResponse(status_code=403, content={"detail": tr(lang, "remote_blocked")})
+    return await call_next(request)
+
+
+class _Nebenserver(uvicorn.Server):
+    @contextmanager
+    def capture_signals(self):   # Signale (Strg+C, Beenden) gehören dem Hauptserver
+        yield
+
+
+class Fernzugriff:
+    """Zweiter Zugang auf allen Netzwerkschnittstellen im selben Prozess, damit das Handy im Heimnetz die Bibliothek
+    abspielen und Songs erzeugen kann. Lässt sich ohne Neustart ein- und ausschalten."""
+    def __init__(self):
+        self._server: _Nebenserver | None = None
+        self._task: asyncio.Task | None = None
+
+    @property
+    def an(self) -> bool:
+        return self._task is not None and not self._task.done()
+
+    async def start(self):
+        if self.an:
+            return
+        # Den Port selbst öffnen: scheitert uvicorn beim Binden, beendet es mit sys.exit den ganzen Prozess
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            if sys.platform != "win32":   # unter Windows erlaubt SO_REUSEADDR das doppelte Belegen eines Ports
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("0.0.0.0", REMOTE_PORT))
+        except OSError:
+            sock.close()
+            raise
+        # log_config/log_level None: die Protokoll-Einstellungen des Hauptservers nicht überschreiben
+        config = uvicorn.Config(app, lifespan="off", log_config=None, log_level=None, timeout_graceful_shutdown=2)
+        self._server = _Nebenserver(config)
+        self._task = asyncio.create_task(self._server.serve(sockets=[sock]))
+        log.info("Handy-Zugriff an, Port %s", REMOTE_PORT)
+
+    async def stop(self):
+        if not self._task:
+            return
+        self._server.should_exit = True
+        try:
+            await asyncio.wait_for(self._task, 5)
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            self._task.cancel()
+        self._server = self._task = None
+        log.info("Handy-Zugriff aus")
+
+
+_fern = Fernzugriff()
+
+
+def _adressen() -> list[str]:
+    """Adressen, unter denen das Handy diesen Rechner im Heimnetz findet."""
+    names = []
+    if sys.platform == "darwin":
+        try:
+            n = subprocess.run(["scutil", "--get", "LocalHostName"], capture_output=True, text=True, timeout=3).stdout.strip()
+            if n:
+                names.append(f"{n}.local")
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    else:
+        names.append(socket.gethostname())
+    try:   # eigene Adresse im Heimnetz: Route zu einer privaten Adresse nachschlagen, es wird nichts gesendet
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("10.255.255.255", 1))
+            names.append(s.getsockname()[0])
+    except OSError:
+        pass
+    return [f"http://{n}:{REMOTE_PORT}" for n in dict.fromkeys(names) if n and not n.startswith("127.")]
+
+
+class RemoteIn(BaseModel):
+    enabled: bool | None = None
+    new_token: bool = False
+
+
+@app.get("/api/remote")
+def remote_status():
+    return {"enabled": _fern.an, "port": REMOTE_PORT, "token": db.get_settings().get("remote_token", ""),
+            "addresses": _adressen()}
+
+
+@app.post("/api/remote")
+async def remote_set(r: RemoteIn, x_lang: str = Header("de")):
+    if r.new_token or (r.enabled and not db.get_settings().get("remote_token")):
+        db.save_settings({"remote_token": secrets.token_urlsafe(18)})
+    if r.enabled is not None:
+        if r.enabled:
+            try:
+                await _fern.start()
+            except OSError as e:
+                raise HTTPException(409, tr(x_lang, "remote_port_busy", port=REMOTE_PORT, e=e.strerror or e)) from e
+        else:
+            await _fern.stop()
+        db.save_settings({"remote": "on" if r.enabled else "off"})
+    return remote_status()
 
 
 # ---------------------------------------------------------------- Modelle
@@ -390,6 +529,8 @@ async def delete_song(sid: str):
     if r["file"]:
         voices.preserve_timings()
         (db.songs_dir() / r["file"]).unlink(missing_ok=True)
+    for old in (db.DATA / "export").glob(f"{sid}_*.mp3"):   # umgewandelte MP3-Kopien des Downloads
+        old.unlink(missing_ok=True)
     db.execute("DELETE FROM songs WHERE id=?", (sid,))
     return {"deleted": True}
 
@@ -654,12 +795,64 @@ async def import_song(audio: UploadFile):
         await audio.close()
 
 
+MP3_KBPS = 192
+FFMPEG = voices.RVC / ('ffmpeg.exe' if os.name == 'nt' else 'ffmpeg')
+
+
+def _mp3_tool() -> Path | None:
+    """Der MP3-Wandler der Engine (mp3-codec), wenn er mitgeliefert wurde."""
+    b = db.ROOT / "engine" / "acestep.cpp" / "build"
+    for p in (b / "mp3-codec", b / "mp3-codec.exe", b / "Release" / "mp3-codec.exe", b / "bin" / "mp3-codec.exe"):
+        if p.is_file():
+            return p
+    if FFMPEG.is_file():
+        return FFMPEG
+    return None
+
+
+def _export_file(r: dict, lang: str = "de") -> Path:
+    """Datei für den Download: das Original (WAV) oder, wenn unter Einstellungen MP3 gewählt ist, eine umgewandelte Kopie.
+    Die Bibliothek behält immer das verlustfreie Original; die MP3 liegt nur als Zwischenspeicher in data/export."""
+    src = db.songs_dir() / r["file"]
+    if db.get_settings().get("export_format") != "mp3" or src.suffix.lower() == ".mp3":
+        return src
+    tool = _mp3_tool()
+    if src.suffix.lower() != '.wav' and FFMPEG.is_file():
+        tool = FFMPEG
+    if not tool:
+        raise HTTPException(500, tr(lang, "mp3_failed"))
+    cache = db.DATA / "export"
+    cache.mkdir(exist_ok=True)
+    out = cache / f"{r['id']}_{MP3_KBPS}.mp3"
+    if out.is_file() and out.stat().st_mtime >= src.stat().st_mtime:
+        return out
+    part = cache / f"{r['id']}_{uuid.uuid4().hex}.part.mp3"
+    command = [str(tool), '-i', str(src), '-o', str(part), '-b', str(MP3_KBPS)]
+    if tool.name.lower() in ('ffmpeg','ffmpeg.exe'):
+        command = [str(tool),'-nostdin','-hide_banner','-loglevel','error','-y','-i',str(src),'-vn','-codec:a','libmp3lame','-b:a',f'{MP3_KBPS}k',str(part)]
+    try:
+        res = subprocess.run(command, capture_output=True, timeout=180,
+                             **({'creationflags':0x08000000} if os.name=='nt' else {}))
+    except (OSError, subprocess.TimeoutExpired) as e:
+        log.warning("MP3-Wandler %s ließ sich nicht ausführen: %r", tool, e)   # z. B. Virenscanner oder fehlende Rechte
+        part.unlink(missing_ok=True)
+        raise HTTPException(500, tr(lang, "mp3_failed"))
+    if res.returncode or not part.is_file() or part.stat().st_size < 1000:
+        log.warning("MP3-Wandler %s: Rückgabewert %s, Ausgabe %s Byte, Quelle %s, Meldung: %s", tool, res.returncode,
+                    part.stat().st_size if part.is_file() else "keine", src,
+                    (res.stderr or b"").decode("utf-8", "replace").strip()[-400:])
+        part.unlink(missing_ok=True)
+        raise HTTPException(500, tr(lang, "mp3_failed"))
+    part.replace(out)
+    return out
+
+
 @app.get("/api/songs/{sid}/audio")
-def song_audio(sid: str, download: bool = False):
+def song_audio(sid: str, download: bool = False, x_lang: str = Header("de")):
     r = db.one("SELECT * FROM songs WHERE id=?", (sid,))
     if not r or not r["file"]:
         raise HTTPException(404)
-    path = db.songs_dir() / r["file"]
+    path = _export_file(r, x_lang) if download else db.songs_dir() / r["file"]
     name = None
     if download:
         base = r["title"] or r["caption"][:40]
@@ -721,9 +914,9 @@ def download_zip(folder: str = "", x_lang: str = Header("de")):
     zip_name = clean(f["name"] if f else "Music Generator") or "Music Generator"
     lt, used = letters(), set()
     tmp = tempfile.NamedTemporaryFile(prefix="mg-", suffix=".zip", dir=db.DATA, delete=False)
-    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as z:   # WAV lässt sich kaum packen -> nur bündeln
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as z:   # WAV und MP3 lassen sich kaum packen -> nur bündeln
         for r in rows:
-            path = db.songs_dir() / r["file"]
+            path = _export_file(r, x_lang)
             base = " ".join(x for x in (clean(r["title"] or r["caption"][:40]) or "Song", lt.get(r["id"], "")) if x)
             name = f"{base}{path.suffix}"
             if name.lower() in used:
@@ -746,12 +939,14 @@ def queue():
 
 @app.get("/api/settings")
 def get_settings():
-    return {**db.get_settings(), "lm_device": db.lm_device(), "songs_dir_default": str(db.SONGS_DIR),
+    return {**db.get_settings(), "lm_device": db.lm_device(), "mp3_available": _mp3_tool() is not None, "songs_dir_default": str(db.SONGS_DIR),
             "dit_xl_available": (db.MODELS_DIR / DIT_MODELS["xl"]).is_file()}
 
 
 @app.put("/api/settings")
 def put_settings(values: dict, x_lang: str = Header("de")):
+    if any(key in values for key in ('remote','remote_token')):
+        raise HTTPException(422, 'Handy-Zugriff bitte über den eigenen Schalter ändern. / Use the dedicated remote-access switch.')
     has_lm_device = 'lm_device' in values
     device = values.pop('lm_device', None)
     if has_lm_device and (not isinstance(device, str) or device not in ('auto', 'cpu')):
@@ -772,6 +967,11 @@ def put_settings(values: dict, x_lang: str = Header("de")):
         if not isinstance(values['dit'],str) or values['dit'] not in DIT_MODELS:raise HTTPException(422,tr(x_lang,'fork_unknown_model'))
         if values['dit']=='xl' and not (db.MODELS_DIR/DIT_MODELS['xl']).is_file():
             raise HTTPException(400,tr(x_lang,'xl_missing'))
+    for key,allowed in (('highs',('off','on')),('export_format',('wav','mp3'))):
+        if key in values and (not isinstance(values[key],str) or values[key] not in allowed):
+            raise HTTPException(422, 'Ungültige Einstellung. / Invalid setting: '+key)
+    if values.get('export_format')=='mp3' and not _mp3_tool():
+        raise HTTPException(400,tr(x_lang,'mp3_failed'))
     if "songs_dir" in values:
         values["songs_dir"] = _move_songs(str(values["songs_dir"] or "").strip(), x_lang)
     if has_lm_device:

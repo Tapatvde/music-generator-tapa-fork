@@ -66,3 +66,17 @@ Eine Vollfassung folgt der Länge der Audio-Vorlage, maximal zehn Minuten. Sie i
 ## Bibliothek und Schutz
 
 Ordner, Suche, Favoriten, Downloads und Endfassungsmarkierung helfen beim Vergleichen. Ein verwendetes Original und verwendete Stimmprofile sind gegen unpassende Entfernung geschützt. Musikgenerierung, Stimme und Training teilen sich eine GPU-Warteschlange. Abbruch wird vor dem nächsten Auftrag verarbeitet. Der Updatebutton zeigt neue Originaländerungen an, übernimmt sie im Fork jedoch nie ungeprüft.
+
+## Export, Höhen und lange Songs
+
+Unter Zahnrad › Export WAV oder MP3 wählen. Die Einstellung gilt für die Downloadknöpfe und den ZIP-Download. Die Bibliotheksdatei und Wiedergabe bleiben erhalten; eine MP3-Kopie mit 192 kbit/s wird bei Bedarf in data/export erzeugt. Das ZIP enthält dieselbe Exportwahl. Vorhandene spezielle VOX-/Lead-/Harmony-Exporte bleiben ihre getrennten Dateien.
+
+Höhen ausgleichen ist standardmäßig aus. Es hebt bei neuen Musik- und Deep-Neufassungen die Höhen ab 12 kHz sanft an und begrenzt anschließend die Spitze. Es ist kein Reparaturfilter für fehlenden Gesang. Der Auftrag übernimmt die Wahl beim Start. Stimm- und Instrumentalableitungen erhalten nicht nochmals denselben Filter.
+
+Im Simple Mode reicht der Längenregler bis zehn Minuten. Über fünf Minuten erscheint ein Hinweis zu Zeit und Speicher. Die Grenze garantiert keinen erfolgreichen langen Render auf jeder GPU. Das Modell kann kürzere Stücke liefern. Neue Formularvorgaben sind 80 Iterationen und 0,85 Varianz; die SFT-Modellvorgabe von 50 Schritten bleibt davon unabhängig. Geladene alte Songparameter werden nicht umgeschrieben.
+
+## Optionaler Handy-Zugriff
+
+Der lokale Einstieg bleibt http://127.0.0.1:8766/. Unter Zahnrad kann ein zusätzlicher Heimnetzzugang auf Port 8767 eingeschaltet werden. Er ist zunächst aus und verlangt einen Zugangsschlüssel. Der QR-Code übergibt Adresse und Schlüssel an die separate iPhone-App des Originalprojekts. Ein physischer iPhone-Praxistest dieser Fork-Ausgabe steht aus.
+
+Update, Serverstopp, Einstellungen-Schreiben und RVC-/Profil-/Trainings-/Deep-Verwaltung sind über diesen Zugang gesperrt. Dafür die lokale Oberfläche am PC verwenden. Der Installer öffnet keine Firewall und installiert keine iPhone- oder Desktop-App. Die neue Desktop-App des Originalentwicklers ist ein eigenes Projekt und ersetzt diesen Web-/RVC-Fork nicht.

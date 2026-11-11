@@ -1,12 +1,12 @@
 {
   "name": "Music Generator – Tapa Fork",
   "upstream_url": "https://github.com/rabbitfiremediacreation/music-generator",
-  "upstream_commit": "8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8",
-  "integrated_on": "2026-10-21",
+  "upstream_commit": "32b049865f0a4677d42e034b56a091c250cc2b56",
+  "integrated_on": "2026-11-11",
   "update_mode": "reviewed_merge",
   "package_status": "public-source-preview",
-  "package_date": "2026-10-21",
+  "package_date": "2026-11-11",
   "repository": "https://github.com/Tapatvde/music-generator-tapa-fork",
   "public_history": "Public upstream history plus sanitized snapshot; private development history excluded",
-  "version": "2026.10.21-preview.1"
+  "version": "2026.11.11-preview.1"
 }

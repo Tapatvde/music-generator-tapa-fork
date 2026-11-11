@@ -68,3 +68,11 @@ Install.bat -Yes -LM 4B -Auto -NoStart
 ## Deinstallation
 
 App mit OFF beenden, eigene Songs und Profile sichern und anschließend ausschließlich den selbst gewählten Programmordner entfernen. Es gibt keinen automatischen Löschbefehl für Nutzerdaten, keinen Dienst, keine Registry-Installation und keine global installierte Python-Umgebung.
+
+## Ergänzungen der November-Preview
+
+Die App-Umgebung enthält nun das SHA-256-gesperrte NumPy 2.4.6 für den Höhenausgleich und certifi 2026.10.23. Auch die neue getrennte RVC-Umgebung erhält certifi 2026.10.23. Nur diese Zertifikatssammlung ändert sich in ihrem Lock; RVC-Rechenpakete, Modellversionen und der sichtbare Quellpatch bleiben unverändert. Der native Build bleibt der geprüfte 6013134; der CPU-Kindprozess verwendet dessen --device-Option. Der Startcontroller wartet bei Bedarf bis zu zwei Minuten auf die Oberfläche.
+
+Bei einer bereits vorhandenen Bibliothek ergänzt der nächste App-Start nur die nullable Zeitspalte started_at. Vorhandene Song- und Trainingseinträge bleiben erhalten. Für eine neue Preview ist eine parallele Einrichtung in einem neuen Ordner die einfache sichere Variante; die bisherige Installation zunächst behalten. Eigene Songs über Fertigen Song importieren übernehmen. Eine automatische Stimmprofil-/Trainingsmigration und ein automatischer Fork-Updater sind nicht enthalten.
+
+Die Originalfunktion Handy-Zugriff bleibt nach der Installation ausgeschaltet. Sie nutzt beim Fork Port 8767, weil 8766 bereits der lokalen Oberfläche gehört. Der Installer aktiviert weder einen Heimnetzlistener noch eine Firewallregel.

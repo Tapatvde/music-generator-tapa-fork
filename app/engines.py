@@ -10,7 +10,9 @@ import asyncio
 import email
 import email.policy
 import json
+import re
 import time
+from pathlib import Path
 from typing import Awaitable, Callable
 
 import httpx
@@ -71,6 +73,7 @@ class AceStepCpp:
         # Liegen mehrere Sprachmodelle im Ordner, nähme der Server sonst das erste (alphabetisch)
         self.lm_model = lm_model
         self._job: tuple[str, str] | None = None   # (Server, Job-ID) des gerade laufenden Auftrags
+        self._mark: dict | None = None             # Log-Größen zu Beginn der Synthese (für die Fehlerursache)
 
     async def cancel(self) -> None:
         """Laufenden Auftrag beim Modellserver abbrechen, damit er nicht weiterrechnet."""
@@ -113,11 +116,16 @@ class AceStepCpp:
                 res.raise_for_status()
                 return res
             if any(w in status for w in ("err", "fail", "cancel")):
-                raise EngineError(f"{label} fehlgeschlagen: {r.text}")
+                hint = _memory_hint(self._mark) if label in ("Synthese","Originalbearbeitung") else ""
+                raise EngineError(hint or f"{label} fehlgeschlagen: {r.text}")
             elapsed = int(time.monotonic() - start)
             if elapsed > self.timeout:
                 await self.cancel()   # Modellserver nicht am alten Auftrag weiterrechnen lassen
-                raise EngineError(f"{label}: Zeitüberschreitung nach {elapsed}s")
+                mins = max(1, round(elapsed / 60))
+                de, en = ("Minute", "minute") if mins == 1 else ("Minuten", "minutes")
+                raise EngineError(f"{label}: Zeitüberschreitung nach {mins} {de}. In den Einstellungen (Zahnrad) die Timeout-Zeit erhöhen, "
+                                  f"besonders bei langen Songs. / Timeout after {mins} {en}. Raise the timeout in the settings (gear), "
+                                  f"especially for long songs.")
             await progress(_fmt_time(elapsed))
             await asyncio.sleep(self.poll)
 
@@ -125,30 +133,64 @@ class AceStepCpp:
         req = {k: v for k, v in params.items() if k in ACE_FIELDS and v not in (None, "")}
         req.setdefault("use_cot_caption", False)  # Prompt wörtlich übernehmen
         req["output_format"] = "wav16"            # 48 kHz / 16 Bit, verlustfrei
+        # ace-server normalisiert sonst auf das 99,999. Perzentil (peak_clip=10) und schneidet alles darüber hart ab (Knacken in lauten
+        # Stellen). Mit 0 wird auf die echte Spitze normalisiert, nichts wird abgeschnitten. Hinweis aus der Community (JUKA0920).
+        req["peak_clip"] = 0
         req["synth_model"] = self.dit_model
         if self.lm_model:
             req["lm_model"] = self.lm_model
+        # Leeres Textfeld mit Gesang: Das Sprachmodell erfindet die Lyrics selbst. Dann braucht es den ausgeschriebenen Sprachnamen
+        # ("de" versteht es nicht, heraus kommt z. B. Türkisch) und höchstens die Modell-Vorgabe 0.85 als Temperatur, sonst zerfallen
+        # die Texte in Zeichen aus fremden Sprachen. Messreihen von vollhonk26 in music-generator-desktop#54.
+        code = req.get("vocal_language", "")
+        invent = not str(params.get("lyrics") or "").strip()
+        lm_req = dict(req)
+        if code in LANGUAGE_NAMES:
+            lm_req["vocal_language"] = LANGUAGE_NAMES[code]
+        if invent:
+            lm_req["lm_temperature"] = min(float(req.get("lm_temperature") or INVENTED_LYRICS_TEMPERATURE), INVENTED_LYRICS_TEMPERATURE)
         start = time.monotonic()   # zählt über beide Phasen (Sprachmodell + Synthese) durch
         async with httpx.AsyncClient(timeout=60) as c:
-            # 1) Sprachmodell: Songstruktur + Audio-Codes
-            r = await c.post(f"{self.lm_base}/lm", json=req)
-            if r.status_code >= 400:
-                raise EngineError(f"/lm: HTTP {r.status_code} {r.text[:300]}")
-            res = await self._wait(c, self.lm_base, str(r.json()["id"]), "Sprachmodell", start, progress)
-            enriched = res.json()
-            if isinstance(enriched, list):
-                enriched = enriched[0]
+            # 1) Sprachmodell: Songstruktur + Audio-Codes. Liefert es bei erfundenem Gesang nur "[Instrumental]", noch einmal würfeln
+            # (der Seed des Sprachmodells ist nicht gesetzt, jeder Versuch zieht neu; der Song-Seed bleibt gleich).
+            for attempt in range(1 + LM_RETRIES):
+                r = await c.post(f"{self.lm_base}/lm", json=lm_req)
+                if r.status_code >= 400:
+                    raise EngineError(f"/lm: HTTP {r.status_code} {r.text[:300]}")
+                res = await self._wait(c, self.lm_base, str(r.json()["id"]), "Sprachmodell", start, progress)
+                enriched = res.json()
+                if isinstance(enriched, list):
+                    enriched = enriched[0]
+                if not (invent and code and _missing_vocals(enriched.get("lyrics"))):
+                    break
+            if code:
+                enriched["vocal_language"] = code   # Synthese und Bibliothek bekommen wieder den Code
             if not enriched.get("audio_codes"):
                 raise EngineError("Sprachmodell hat keine Audio-Codes geliefert (LM auf Metal? LM-Server auf CPU nutzen)")
+            # Die Klangerzeugung schafft höchstens 3000 Codes (600 s bei 5 Codes je Sekunde, 15000 Latent-Frames). Das Sprachmodell
+            # liefert gelegentlich ein paar Codes mehr als angefragt; dann bräche die Synthese ab. Daher auf Länge × 5 kürzen.
+            want = float(params.get("duration") or enriched.get("duration") or 0)
+            limit = int(round(min(want if want > 0 else MAX_SECONDS, MAX_SECONDS) * 5))
+            codes = [c for c in str(enriched.get("audio_codes") or "").split(",") if c.strip()]
+            if len(codes) > limit:
+                enriched["audio_codes"] = ",".join(codes[:limit])
             enriched["output_format"] = req["output_format"]
+            enriched["peak_clip"] = req["peak_clip"]
             enriched["synth_model"] = req["synth_model"]
 
             # 2) Synthese
+            self._mark = _log_sizes()   # nur Log-Zeilen ab hier zählen für die Fehlerursache
             r = await c.post(f"{self.base}/synth", json=enriched)
             if r.status_code >= 400:
                 raise EngineError(f"/synth: HTTP {r.status_code} {r.text[:300]}")
             res = await self._wait(c, self.base, str(r.json()["id"]), "Synthese", start, progress)
-            audio, ext = _extract_audio(res)
+            try:
+                audio, ext = _extract_audio(res)
+            except EngineError:
+                hint = _memory_hint(self._mark)
+                if hint:
+                    raise EngineError(hint)
+                raise
         meta = {k: enriched.get(k) for k in ("bpm", "duration", "keyscale", "timesignature", "vocal_language", "lyrics", "caption")}
         meta['sound_model'] = self.dit_model
         return audio, ext, meta
@@ -166,16 +208,76 @@ class AceStepCpp:
 
     async def edit_original(self, request: dict, audio: bytes, progress: Progress):
         """Audio-conditioned synthesis; never replace the source with newly generated LM codes."""
-        req={**request,'output_format':'wav16','synth_model':self.dit_model,'use_cot_caption':False}
+        req={**request,'output_format':'wav16','synth_model':self.dit_model,'use_cot_caption':False,'peak_clip':0}
         parts={'request':('request.json',json.dumps(req,ensure_ascii=False),'application/json'),
                'audio':('source.wav',audio,'audio/wav'),'ref_audio':('reference.wav',audio,'audio/wav')}
         start=time.monotonic()
         async with httpx.AsyncClient(timeout=180) as c:
+            self._mark = _log_sizes()
             response=await c.post(f'{self.base}/synth',files=parts)
             if response.status_code>=400:
                 raise EngineError(f'Originalbearbeitung: HTTP {response.status_code} {response.text[:300]}')
             result=await self._wait(c,self.base,str(response.json()['id']),'Originalbearbeitung',start,progress)
         return _extract_audio(result)
+
+
+MAX_SECONDS = 600   # Obergrenze der Klangerzeugung (15000 Latent-Frames)
+
+LANGUAGE_NAMES = {
+    "en": "English", "de": "German", "fr": "French", "es": "Spanish", "it": "Italian",
+    "pt": "Portuguese", "ja": "Japanese", "ko": "Korean", "zh": "Chinese", "ru": "Russian",
+}
+INVENTED_LYRICS_TEMPERATURE = 0.85
+LM_RETRIES = 2
+
+
+def _missing_vocals(lyrics) -> bool:
+    """Gesang bestellt, aber das Sprachmodell hat keine Worte geliefert (nur "[Instrumental]" oder Abschnittsmarken)."""
+    text = re.sub(r"\[[^\]]*\]", "", str(lyrics or ""))
+    return not re.search(r"\w", text)
+
+
+_LOGS = ("ace-fork.log", "ace-server.log", "ace-server.err.log")
+
+
+def _log_sizes() -> dict:
+    from . import db
+    base = db.DATA
+    out = {}
+    for name in _LOGS:
+        try:
+            out[name] = (base / name).stat().st_size
+        except OSError:
+            out[name] = 0
+    return out
+
+
+def _memory_hint(since: dict | None = None) -> str:
+    """Steht in den neuen Zeilen der Server-Logs (seit Beginn der Synthese), warum die Klangerzeugung scheiterte?
+    Liefert einen verständlichen Satz oder leer. Alte Zeilen aus früheren Läufen zählen nicht."""
+    from . import db
+    base = db.DATA
+    since = since or {}
+    tail = ""
+    for name in _LOGS:
+        try:
+            with open(base / name, "rb") as f:
+                f.seek(0, 2)
+                size = f.tell()
+                start = since.get(name, max(0, size - 12000))
+                if start > size:      # Log wurde neu begonnen (Server neu gestartet)
+                    start = 0
+                f.seek(start)
+                tail += f.read(200000).decode("utf-8", "replace").lower()
+        except OSError:
+            continue
+    if "exceeds silence_latent" in tail:
+        return ("Der Song ist für die Klangerzeugung zu lang (über 10 Minuten). Bitte eine kürzere Länge wählen. "
+                "/ The song is too long for the synthesis (over 10 minutes). Please choose a shorter length.")
+    if "out of memory" in tail or "failed to allocate" in tail or "outofdevicememory" in tail:
+        return ("Der Grafikspeicher reicht für diese Songlänge nicht (out of memory). Kürzeren Song oder Standard statt XL wählen. "
+                "/ The graphics memory is too small for this song length. Choose a shorter song or Standard instead of XL.")
+    return ""
 
 
 def _extract_json(res: httpx.Response):

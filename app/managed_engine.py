@@ -50,13 +50,21 @@ class ManagedAce:
         arguments = self.server_arguments(port)
         if cpu:
             environment['GGML_BACKEND'] = 'CPU'
-            # The pinned 6013134 runtime selects devices through its CLI.
-            arguments.extend(['--device', 'CPU'])
+            if await asyncio.to_thread(self._supports_device_option):
+                arguments.extend(['--device','CPU'])
         name = 'ace-lm-fork.log' if cpu else 'ace-fork.log'
         with (db.DATA / name).open('ab') as log:
             return await asyncio.create_subprocess_exec(*arguments,
                 cwd=db.ROOT, env=environment, stdout=log, stderr=asyncio.subprocess.STDOUT,
                 **({'creationflags':0x08000000} if os.name=='nt' else {}))
+
+    def _supports_device_option(self):
+        try:
+            result = subprocess.run([str(self.binary),'--help'],capture_output=True,timeout=5,
+                **({'creationflags':0x08000000} if os.name=='nt' else {}))
+            return b'--device' in result.stdout + result.stderr
+        except (OSError,subprocess.TimeoutExpired):
+            return False
 
     async def _operate(self, operation, progress):
         if not self.binary.is_file():

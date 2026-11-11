@@ -1,11 +1,12 @@
 # Code, Modelle und Werkzeuge haben getrennte Lizenzen
 
-Stand 21.10.2026. Diese Übersicht dokumentiert Herkunft und Bedingungen; sie ist keine pauschale kommerzielle Freigabe sämtlicher Komponenten oder erzeugter Musik. Die maßgeblichen Originaltexte sind verlinkt und werden, soweit in Archiven enthalten, lokal mit heruntergeladen.
+Stand 11.11.2026. Diese Übersicht dokumentiert Herkunft und Bedingungen; sie ist keine pauschale kommerzielle Freigabe sämtlicher Komponenten oder erzeugter Musik. Die maßgeblichen Originaltexte sind verlinkt und werden, soweit in Archiven enthalten, lokal mit heruntergeladen.
 
 | Bestandteil | Quelle | Angegebene Lizenz / Besonderheit |
 |---|---|---|
-| Music Generator | [Original-LICENSE](https://github.com/rabbitfiremediacreation/music-generator/blob/8c522ee9bb16362a2e12f883b5cec2d45ed1b1e8/LICENSE) | MIT, Copyright ALPHATESTER bleibt enthalten |
+| Music Generator | [Original-LICENSE](https://github.com/rabbitfiremediacreation/music-generator/blob/32b049865f0a4677d42e034b56a091c250cc2b56/LICENSE) | MIT, Copyright ALPHATESTER bleibt enthalten |
 | wavesurfer.js | [Projektlizenz](https://github.com/katspaugh/wavesurfer.js/blob/main/LICENSE), mitgelieferte static/vendor/wavesurfer-LICENSE.txt | BSD-3-Clause; separat vom MIT-Forkcode |
+| QR Code Generator for JavaScript | static/vendor/qrcode.js, Copyright (c) 2009 Kazuhiko Arase; static/vendor/qrcode-LICENSE.txt | MIT; Hinweise unverändert erhalten |
 | Eigene Fork-Anpassungen | LICENSE dieses Ordners | MIT; keine Umlizenzierung anderer Komponenten |
 | RVC-Quellcode | [RVC-LICENSE](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI/blob/81eed5e8f68b6bed1789f682fe78cdd324495afc/LICENSE) | MIT; Quelle und Änderungen als Patch nachvollziehbar |
 | ACE-Step / GGUF-Gewichte | [ACE-Step](https://github.com/ace-step/ACE-Step-1.5), [GGUF-Repository](https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF) | MIT laut Quellen; Modellkarten beachten |

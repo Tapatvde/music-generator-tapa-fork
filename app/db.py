@@ -77,8 +77,12 @@ DEFAULT_SETTINGS = {
     "lm_model": _conf.get("LM_FILE", ""),     # leer = erstes Sprachmodell im Modellordner
     "poll_interval": 1.5,
     "timeout_minutes": 30,
-    "dit": "standard",
+    "dit": "standard",                 # Klangmodell: "standard" (2B) oder "xl" (4B, braucht die XL-Datei)
+    "highs": "off",                    # Höhen ausgleichen: "on" hebt die Höhen an, die der Klang-Decoder verliert (app/klang.py)
+    "export_format": "wav",            # Download/Export: "wav" (verlustfrei, wie erzeugt) oder "mp3" (umgewandelt, kleiner)
     "songs_dir": "",                   # leer = data/songs im Programmordner, sonst absoluter Pfad
+    "remote": "off",                   # Handy-Zugriff im Heimnetz: "on" öffnet einen zweiten Zugang (app/main.py, REMOTE_PORT)
+    "remote_token": "",                # Zugangsschlüssel dafür, wird beim ersten Einschalten erzeugt
 }
 
 _lock = threading.Lock()
@@ -150,6 +154,9 @@ def init():
         for column in ('removed_at','removed_status'):
             if column not in training_columns:
                 _con.execute(f'ALTER TABLE voice_training ADD COLUMN {column} TEXT')
+        # Beginn der Berechnung (created_at ist der Zeitpunkt des Einreihens; wartende Songs würden sonst die Wartezeit mitzählen)
+        if "started_at" not in [r["name"] for r in _con.execute("PRAGMA table_info(songs)")]:
+            _con.execute("ALTER TABLE songs ADD COLUMN started_at TEXT")
         # Nach einem Absturz hängengebliebene Jobs wieder einreihen
         _con.execute("UPDATE songs SET status='queued', message=NULL WHERE status='running'")
         _con.execute("UPDATE voice_training SET status='error', message='Training durch Programmende unterbrochen; vorhandene Daten bleiben erhalten.' WHERE status='running'")

@@ -25,7 +25,7 @@ if '--write' in sys.argv:
         if path.name=='.env':raise ValueError('Do not distribute environment files')
         if re.search(r'[A-Za-z]:[/\\]Users[/\\][^/\\\s]+',text):raise ValueError('Personal Windows path in source: '+entry['path'])
         if re.search(r'github_pat_[A-Za-z0-9_]{30,}|gh[pousr]_[A-Za-z0-9]{30,}|-----BEGIN (?:RSA |OPENSSH )?PRIVATE KEY-----',text):raise ValueError('Credential-looking data')
-    report={'schema_version':1,'package':'Music Generator – Tapa Fork','date':'2026-10-21','version':'2026.10.21-preview.1','files':current,'total_bytes':sum(row['bytes'] for row in current),'private_data_included':False,'runtime_binaries_included':False}
+    report={'schema_version':1,'package':'Music Generator – Tapa Fork','date':'2026-11-11','version':'2026.11.11-preview.1','files':current,'total_bytes':sum(row['bytes'] for row in current),'private_data_included':False,'runtime_binaries_included':False}
     (root/'PACKAGE-CONTENTS.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     (root/'SHA256SUMS.txt').write_text('\n'.join(row['sha256']+'  '+row['path'] for row in current)+'\n',encoding='utf-8')
 else:

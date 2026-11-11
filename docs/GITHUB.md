@@ -2,7 +2,7 @@
 
 Öffentlicher Fork: [Tapatvde/music-generator-tapa-fork](https://github.com/Tapatvde/music-generator-tapa-fork), weiterhin mit dem [Originalprojekt](https://github.com/rabbitfiremediacreation/music-generator) verbunden.
 
-Die Ausgabe **2026.10.21-preview.1** aktualisiert den bisherigen öffentlichen Preview-Stand. Zuvor gab es keinen eigenen Release-Tag. Diese Ausgabe bleibt ein GitHub-Prerelease; eine nummerierte Preview ist keine stabile Freigabe.
+Die Ausgabe **2026.11.11-preview.1** aktualisiert die bisherige Preview **2026.10.21-preview.1**. Der frühere Tag und dessen Downloads bleiben als Rückfallstand erhalten. Diese Ausgabe bleibt ein GitHub-Prerelease; eine nummerierte Preview ist keine stabile Freigabe.
 
 Die öffentliche Historie enthält die bisherige öffentliche Fork-Historie, öffentliche Originaländerungen und einen bereinigten Quellstand. Die private Entwicklungshistorie wird nicht gepusht. Die Veröffentlichungs-Commits verwenden GitHubs noreply-Adresse.
 

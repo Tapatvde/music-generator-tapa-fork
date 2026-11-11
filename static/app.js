@@ -37,6 +37,7 @@ let songs = [];
 let currentId = null;
 let onlyFav = false;       // Favoriten-Filter der Bibliothek
 const openLyrics = new Set();   // Songs, deren generierte Lyrics gerade aufgeklappt sind
+let exportFmt = "wav";   // Download-Format laut Einstellung (nur für die Beschriftung des Download-Knopfs)
 let folders = { folders: [], all: 0, none: 0 };
 let curFolder = "";      // "" = alle, "none" = unsortiert, sonst Ordner-ID
 try { curFolder = localStorage.getItem("folder") || ""; } catch {}
@@ -47,7 +48,7 @@ let editingId = null;   // id des Songs, dessen Titel gerade bearbeitet wird
 let played = new Set();
 try { played = new Set(JSON.parse(localStorage.getItem("played") || "[]")); } catch {}
 const markPlayed = (id) => { played.add(id); try { localStorage.setItem("played", JSON.stringify([...played])); } catch {} };
-const genTime = (s) => { const t = s.result_meta?.elapsed_seconds ?? s.result_meta?.generation_seconds ?? (Date.parse(s.finished_at) - Date.parse(s.created_at)) / 1000; return isFinite(t) && t >= 0 ? fmt(t) : null; };
+const genTime = (s) => { const t = s.result_meta?.elapsed_seconds ?? s.result_meta?.generation_seconds ?? (Date.parse(s.finished_at) - Date.parse(s.started_at || s.created_at)) / 1000; return isFinite(t) && t >= 0 ? fmt(t) : null; };
 
 // Würfel: zufälliger Prompt. Sechs Bauformen von kurz bis lang, gespeist aus Stimmungen, Szenen, Besetzungen,
 // Produktion, Verlauf und ganzen Ideen; Gesang nur, wenn der Song nicht instrumental ist. Der Stil bleibt deine Wahl.
@@ -152,6 +153,7 @@ function updateSlider(box) {
   span.classList.toggle("small", Array.isArray(out));
   inp.setAttribute("aria-valuetext", box.dataset.fmt === "dur" ? t("vt_dur", Math.floor(v / 60), v % 60)
     : box.dataset.fmt === "bpm" ? (v <= min ? t("vt_auto") : `${v} BPM`) : span.textContent);
+  if (inp.name === "duration") $("#lenHint").hidden = v <= 300;   // ab 5:00 ehrlicher Hinweis: dauert lange, braucht viel Speicher
   if (inp.name === "variants") $("#genBtn").textContent = v > 1 ? t("generate_n", v) : t("generate");
 }
 const showDur = () => document.querySelectorAll(".slider").forEach(updateSlider);
@@ -632,7 +634,7 @@ function render() {
     const actions = [
       s.status === "done" && `<button class="sek icon ${s.favorite ? "on" : ""}" data-a="fav" title="${t("fav")}">${s.favorite ? "★" : "☆"}</button>`,
       s.status === "done" && !preview && p.library_role !== "final" && `<button class="sek voice-action" data-a="final">${t("voice_mark_final")}</button>`,
-      s.status === "done" && `<a class="download icon fmt" href="${s.url}?download=1" title="${t("download")}">${s.file.endsWith(".wav") ? "WAV" : "MP3"}</a>`,
+      s.status === "done" && `<a class="download icon fmt" href="${s.url}?download=1" title="${t("download")}">${exportFmt === "mp3" ? "MP3" : s.file.split(".").pop().toUpperCase()}</a>`,
       s.status === "done" && `<button class="sek voice-action" data-a="voice" title="${t("voice_convert")}">${t(instrumental?'instrumental_voice':'voice_button')}</button>`,
       s.status === "done" && !instrumental && !preview && s.lyrics!=='[Instrumental]' && `<button class="sek voice-action" data-a="instrumental">${t('instrumental_create')}</button>`,
       s.status === "done" && !preview && `<button class="sek voice-action deep-library-action" data-a="deep">Deep Mode</button>`,
@@ -921,7 +923,9 @@ async function checkHealth() {
 const dlg = $("#settingsDlg"), sf = $("#settingsForm");
 $("#btnSettings").onclick = async () => {
   const s = await api("/api/settings");
-  for (const k of ["server_url", "lm_url", "timeout_minutes", "songs_dir", "dit", "lm_device"]) sf[k].value = s[k];
+  for (const k of ["server_url", "lm_url", "timeout_minutes", "songs_dir", "dit", "highs", "lm_device", "export_format"]) sf[k].value = s[k];
+  sf.export_format.querySelector('option[value="mp3"]').disabled = !s.mp3_available;   // MP3 nur, wenn der Wandler der Engine da ist
+  $("#expHint").hidden = s.mp3_available;
   sf.dit.querySelector('option[value="xl"]').disabled = !s.dit_xl_available;   // XL nur wählbar, wenn die Datei da ist
   $("#ditHint").hidden = s.dit_xl_available;
   sf.songs_dir.placeholder = s.songs_dir_default;   // Standard als Platzhalter, leer lassen = Standard
@@ -929,7 +933,7 @@ $("#btnSettings").onclick = async () => {
 };
 const saveSettings = () => api("/api/settings", { method: "PUT", body: JSON.stringify({
   server_url: sf.server_url.value.trim(), lm_url: sf.lm_url.value.trim(), timeout_minutes: Number(sf.timeout_minutes.value) || 30,
-  songs_dir: sf.songs_dir.value.trim(),dit:sf.dit.value,lm_device:sf.lm_device.value }) }).then(result=>{document.dispatchEvent(new Event('settingschange'));return result;}).catch((err) => { alert(err.message); $("#btnSettings").click(); });
+  songs_dir: sf.songs_dir.value.trim(),dit:sf.dit.value,lm_device:sf.lm_device.value,highs:sf.highs.value,export_format:sf.export_format.value }) }).then(result=>{document.dispatchEvent(new Event('settingschange'));return result;}).catch((err) => { alert(err.message); $("#btnSettings").click(); });
 // Anordnung: untereinander oder Generator links / Bibliothek rechts
 function setLayout(l) {
   document.querySelector(".wrap").classList.toggle("side", l === "side");
@@ -972,6 +976,39 @@ updApply.onclick = async () => {
 };
 $("#btnSettings").addEventListener("click", () => { updInfo.textContent = ""; updList.hidden = true; updApply.hidden = true; updApply.disabled = false; });
 
+// Handy-Zugriff: zweiter Zugang im Heimnetz für die iPhone-App, gilt sofort (eigener Aufruf, nicht über SPEICHERN)
+const remoteSel = $("#remoteSel"), remoteErr = $("#remoteErr");
+function showRemote(r) {
+  remoteSel.value = r.enabled ? "on" : "off";
+  $("#remoteInfo").hidden = !r.enabled;
+  $("#remoteAddr").replaceChildren(...r.addresses.map(a => Object.assign(document.createElement("li"), { textContent: a })));
+  $("#remoteToken").value = r.token;
+  // QR-Code für die iPhone-Kamera: öffnet die App, die Adresse (Ersatz: IP) und Schlüssel übernimmt
+  const qrBox = $("#remoteQr");
+  qrBox.replaceChildren();
+  if (r.enabled && r.addresses.length && typeof qrcode === "function") {
+    const q = new URLSearchParams({ server: r.addresses[0], token: r.token });
+    if (r.addresses[1]) q.set("alt", r.addresses[1]);
+    const qr = qrcode(0, "M");
+    qr.addData(`musicgenerator://connect?${q}`);
+    qr.make();
+    qrBox.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 8, scalable: true });
+  }
+}
+async function remoteCall(body) {
+  remoteErr.hidden = true;
+  try {
+    showRemote(await api("/api/remote", body ? { method: "POST", body: JSON.stringify(body) } : {}));
+  } catch (e) {
+    remoteErr.textContent = e.message; remoteErr.hidden = false;
+    if (body) api("/api/remote").then(showRemote).catch(() => {});   // tatsächlichen Stand zeigen
+  }
+}
+$("#btnSettings").addEventListener("click", () => remoteCall());
+remoteSel.onchange = () => remoteCall({ enabled: remoteSel.value === "on" });
+$("#remoteNew").onclick = () => remoteCall({ new_token: true });
+$("#remoteToken").onfocus = (e) => e.target.select();
+
 // Server stoppen = „Music Generator OFF“ ausführen
 let stopTip = "";
 function syncStopBtn() {
@@ -997,7 +1034,8 @@ $("#stopBtn").onclick = async () => {
   } catch (e) { $("#stopInfo").className = "small err-t"; $("#stopInfo").textContent = e.message; refresh(); }
 };
 
-dlg.addEventListener("close", async () => { if (dlg.returnValue === "save") { await saveSettings(); checkHealth(); } });
+const loadExportFmt = () => api("/api/settings").then((s) => { exportFmt = s.export_format === "mp3" ? "mp3" : "wav"; }).catch(() => {});
+dlg.addEventListener("close", async () => { if (dlg.returnValue === "save") { await saveSettings(); await loadExportFmt(); render(); checkHealth(); } });
 
 // Sprachumschalter (DE | EN)
 $("#uiLang").addEventListener("change", (e) => setLang(e.target.value));
@@ -1008,4 +1046,5 @@ document.addEventListener("langchange", () => {
 
 checkHealth();
 setInterval(checkHealth, 15000);
+loadExportFmt().then(() => render());
 refresh();

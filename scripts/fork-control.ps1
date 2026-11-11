@@ -39,7 +39,7 @@ if (-not $forkOwned) {
     $forkOwned = Start-Process -FilePath $forkPython -ArgumentList @('-m','uvicorn','app.main:app','--host','127.0.0.1','--port',"$forkPort") -WorkingDirectory $forkRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $forkData 'fork-app.out.log') -RedirectStandardError (Join-Path $forkData 'fork-app.err.log')
     [PSCustomObject]@{ProcessId=$forkOwned.Id;StartTicks=$forkOwned.StartTime.ToUniversalTime().Ticks.ToString()} | ConvertTo-Json | Set-Content -LiteralPath $forkStateFile -Encoding utf8
 }
-for ($forkAttempt=0; $forkAttempt -lt 40; $forkAttempt++) {
+for ($forkAttempt=0; $forkAttempt -lt 240; $forkAttempt++) {
     $forkOwned.Refresh()
     if ($forkOwned.HasExited) { throw 'Die App wurde beim Start beendet. Siehe data\fork-app.err.log.' }
     try {
